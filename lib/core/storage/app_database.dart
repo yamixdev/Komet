@@ -179,6 +179,7 @@ abstract class SyncKey {
   static const profileInviteLink = 'profile_invite_link';
   static const welcomeStickerIds = 'welcome_sticker_ids';
   static const channelsFolderSuggested = 'channels_folder_suggested';
+  static const viewsCountEnabled = 'views_count_enabled';
   static const folderFiltersEnabled = 'folder_filters_enabled';
   static const privacyOverrides = 'privacy_overrides';
 }
@@ -228,6 +229,20 @@ class AppDatabase {
     }
     return _mobileDbDir ??= await databaseFactorySqflitePlugin
         .getDatabasesPath();
+  }
+
+  static String get _databaseName => 'komet${AppInstance.suffix}.db';
+
+  static Future<int> fileBytes() async {
+    final base = join(await _databasesDir(), _databaseName);
+    var total = 0;
+    for (final suffix in const ['', '-wal', '-shm']) {
+      try {
+        final file = File('$base$suffix');
+        if (await file.exists()) total += await file.length();
+      } catch (_) {}
+    }
+    return total;
   }
 
   static String? _legacyExposedDb;
@@ -291,7 +306,7 @@ class AppDatabase {
   static Future<Database> _open() async {
     final dbPath = await _databasesDir();
     await Directory(dbPath).create(recursive: true);
-    final target = join(dbPath, 'komet${AppInstance.suffix}.db');
+    final target = join(dbPath, _databaseName);
     await _migrateLegacyDb(target);
     final opened = await openDatabase(
       target,
@@ -1531,6 +1546,23 @@ class AppDatabase {
       where:
           'account_id = ? AND chat_id = ? AND id = ? '
           "AND status = 'sending' AND deleted = 0",
+      whereArgs: [accountId, chatId, messageId],
+    );
+    return changed != 0;
+  }
+
+  static Future<bool> requeueFailedMessage(
+    int accountId,
+    int chatId,
+    String messageId,
+  ) async {
+    final db = await _instance;
+    final changed = await db.update(
+      'messages',
+      {'status': 'pending'},
+      where:
+          'account_id = ? AND chat_id = ? AND id = ? '
+          "AND status = 'error' AND deleted = 0",
       whereArgs: [accountId, chatId, messageId],
     );
     return changed != 0;

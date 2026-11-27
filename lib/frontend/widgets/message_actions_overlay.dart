@@ -95,7 +95,7 @@ void showMessageActions({
   ui.Image? snapshot,
   required Rect originRect,
   required Offset tapPoint,
-  required bool isMe,
+  required bool outgoing,
   double bottomReservedSpace = 0,
   required String? messageText,
   required String? copyText,
@@ -112,6 +112,7 @@ void showMessageActions({
   bool allowDelete = true,
   bool allowCopy = true,
   VoidCallback? onEdit,
+  VoidCallback? onRetry,
   VoidCallback? onReply,
   VoidCallback? onForward,
   VoidCallback? onMarkUnread,
@@ -147,7 +148,7 @@ void showMessageActions({
       snapshot: snapshot,
       originRect: originRect,
       tapPoint: tapPoint,
-      isMe: isMe,
+      outgoing: outgoing,
       bottomReservedSpace: bottomReservedSpace,
       messageText: messageText,
       copyText: copyText,
@@ -164,6 +165,7 @@ void showMessageActions({
       allowDelete: allowDelete,
       allowCopy: allowCopy,
       onEdit: onEdit,
+      onRetry: onRetry,
       onReply: onReply,
       onForward: onForward,
       onMarkUnread: onMarkUnread,
@@ -194,7 +196,7 @@ class _MessageActionsLayer extends StatefulWidget {
   final ui.Image? snapshot;
   final Rect originRect;
   final Offset tapPoint;
-  final bool isMe;
+  final bool outgoing;
   // #***! высота панели композера, которая не входит в MediaQuery.viewInsets
   // (она видна и без клавиатуры) — без этого меню/реакции могли вылезать
   // за неё или за нижний край экрана
@@ -215,6 +217,7 @@ class _MessageActionsLayer extends StatefulWidget {
   final bool allowDelete;
   final bool allowCopy;
   final VoidCallback? onEdit;
+  final VoidCallback? onRetry;
   final VoidCallback? onReply;
   final VoidCallback? onForward;
   final VoidCallback? onMarkUnread;
@@ -235,7 +238,7 @@ class _MessageActionsLayer extends StatefulWidget {
     required this.snapshot,
     required this.originRect,
     required this.tapPoint,
-    required this.isMe,
+    required this.outgoing,
     this.bottomReservedSpace = 0,
     required this.messageText,
     required this.copyText,
@@ -253,6 +256,7 @@ class _MessageActionsLayer extends StatefulWidget {
     this.allowDelete = true,
     this.allowCopy = true,
     this.onEdit,
+    this.onRetry,
     this.onReply,
     this.onForward,
     this.onMarkUnread,
@@ -414,7 +418,7 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
       final spaceLeft = (rect.left - 16) - _hMargin;
       final rightFits = spaceRight >= reach;
       final leftFits = spaceLeft >= reach;
-      if (widget.isMe) {
+      if (widget.outgoing) {
         side = (leftFits || !rightFits) ? _RadialSide.left : _RadialSide.right;
       } else {
         side = (rightFits || !leftFits) ? _RadialSide.right : _RadialSide.left;
@@ -518,7 +522,7 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
           ? widget.originRect.bottom + 10
           : widget.originRect.top - 10 - menuHeight;
       menuY = rawY.clamp(8.0, maxMenuY).toDouble();
-      final rawX = widget.isMe
+      final rawX = widget.outgoing
           ? widget.originRect.right - menuWidth
           : widget.originRect.left;
       menuX = rawX.clamp(8.0, screenSize.width - menuWidth - 8.0).toDouble();
@@ -549,6 +553,8 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
     final copyText = widget.copyText;
     final canCopy = widget.allowCopy && copyText != null && copyText.isNotEmpty;
     return <_Action>[
+      if (widget.onRetry != null)
+        _Action(Symbols.refresh, l10n.msgActionsRetry, _retry),
       if (widget.onReply != null)
         _Action(Symbols.reply, l10n.msgActionsReply, _reply),
       if (widget.onForward != null)
@@ -560,7 +566,7 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
         _Action(Symbols.download, l10n.msgActionsSave, _save),
       if (widget.onSaveAs != null)
         _Action(Symbols.save_as, l10n.photoViewerSaveAs, _saveAs),
-      if (widget.isMe && widget.onEdit != null)
+      if (widget.onEdit != null)
         _Action(Symbols.edit, l10n.msgActionsEdit, _edit),
       if (widget.onPin != null)
         _Action(
@@ -735,6 +741,12 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
     final onEdit = widget.onEdit;
     await _close();
     onEdit?.call();
+  }
+
+  Future<void> _retry() async {
+    final onRetry = widget.onRetry;
+    await _close();
+    onRetry?.call();
   }
 
   Future<void> _reply() async {
@@ -1227,7 +1239,7 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
       left = _menuRect.left;
       top = _menuRect.top;
     } else {
-      left = widget.isMe
+      left = widget.outgoing
           ? widget.originRect.right - panelWidth
           : widget.originRect.left;
       top = _showBelow
@@ -1584,7 +1596,10 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
           scale: scale,
           alignment: tapAnchored
               ? Alignment(-1.0, _showBelow ? -1.0 : 1.0)
-              : Alignment(widget.isMe ? 1.0 : -1.0, _showBelow ? -1.0 : 1.0),
+              : Alignment(
+                  widget.outgoing ? 1.0 : -1.0,
+                  _showBelow ? -1.0 : 1.0,
+                ),
           child: Material(
             color: cs.surfaceContainerHigh,
             borderRadius: BorderRadius.circular(16),

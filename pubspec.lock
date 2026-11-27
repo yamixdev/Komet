@@ -73,6 +73,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.13.1"
+  audio_metadata_reader:
+    dependency: "direct main"
+    description:
+      name: audio_metadata_reader
+      sha256: "66e8e216deab90008fa161c345e93c7c3cab28667042264976eb03865122a7b9"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.8.1"
   audio_service:
     dependency: "direct main"
     description:
@@ -209,6 +217,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.1"
+  charset:
+    dependency: transitive
+    description:
+      name: charset
+      sha256: "27802032a581e01ac565904ece8c8962564b1070690794f0072f6865958ce8b9"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.1"
   checked_yaml:
     dependency: transitive
     description:
@@ -540,12 +556,11 @@ packages:
     source: hosted
     version: "1.2.0-beta.3"
   flutter_inappwebview_linux:
-    dependency: transitive
+    dependency: "direct overridden"
     description:
-      name: flutter_inappwebview_linux
-      sha256: "2e1a3b09bb911fb5a8bb155cb7f1eb1428a19b6e20363b9db48beef428b8cef5"
-      url: "https://pub.dev"
-    source: hosted
+      path: "native/flutter_inappwebview_linux"
+      relative: true
+    source: path
     version: "0.1.0-beta.1"
   flutter_inappwebview_macos:
     dependency: transitive
@@ -734,8 +749,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: fddd76a999c6181813d9b1fddfe65a835ea2e7b2
-      resolved-ref: fddd76a999c6181813d9b1fddfe65a835ea2e7b2
+      ref: "8fcca4e41c6f4e736fb1b48dc8d86638ff01c9bf"
+      resolved-ref: "8fcca4e41c6f4e736fb1b48dc8d86638ff01c9bf"
       url: "https://github.com/KometTeam/flutter-webrtc.git"
     source: git
     version: "1.5.2"
@@ -1009,10 +1024,10 @@ packages:
     dependency: "direct main"
     description:
       name: kolibri
-      sha256: e2f3414e6a8601c31dd3c5a7ebd901e48b67bf29265333b27366402bf4ac52ef
+      sha256: d33e509b6995dbf86f5b51dbb8f41ed479dd37a4d38ceb0918ed36765af75896
       url: "https://pub.dev"
     source: hosted
-    version: "0.1.5"
+    version: "0.1.7"
   komet_crypto:
     dependency: "direct main"
     description:

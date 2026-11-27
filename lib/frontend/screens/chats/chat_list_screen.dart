@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:flutter/scheduler.dart';
+import 'chat_folders_sheet.dart';
 import 'chat_preview_card.dart';
 import 'chat_screen.dart';
 import 'search_screen.dart';
@@ -38,6 +39,7 @@ import '../../widgets/compact_bottom_navigation_bar.dart';
 import '../../widgets/springy_tap.dart';
 import '../../widgets/visible_page_tickers.dart';
 import '../../widgets/informer_banner_tile.dart';
+import '../../widgets/whats_new_sheet.dart';
 import '../../../backend/modules/forward_sender.dart';
 import '../../../backend/modules/share_sender.dart';
 import '../../widgets/lottie_slash_icon.dart';
@@ -74,6 +76,8 @@ import '../../../core/protocol/opcode_map.dart';
 import '../../../core/protocol/packet.dart';
 import '../../../core/utils/haptics.dart';
 import '../../../core/config/build_profile.dart';
+import '../../../core/config/whats_new.dart';
+import '../../../core/config/app_motion.dart';
 import '../../../core/config/app_animations.dart';
 import '../../../core/config/app_frost.dart';
 import '../../../core/config/app_spectrum_background.dart';
@@ -83,6 +87,7 @@ import '../../../core/cache/info_cache.dart';
 import '../../../core/cache/official_options.dart';
 import '../../../core/config/app_visual_style.dart';
 import '../../../core/config/app_stories.dart';
+import '../../../core/whats_new/spotlight_ids.dart';
 import '../../../core/config/app_colors.dart';
 import '../../../core/config/komet_settings.dart';
 import '../../../backend/models/chat_folder.dart';
@@ -128,6 +133,7 @@ import '../../../core/config/app_fonts.dart';
 import '../lock/lock_glyph.dart';
 import '../../../core/security/app_lock.dart';
 import '../../widgets/verified_mark.dart';
+import '../../widgets/seasonal_snow.dart';
 
 const String _savedWelcomeKey = 'welcome.saved.dialog.message';
 
@@ -298,14 +304,27 @@ class _ChatListScreenState extends State<ChatListScreen>
   int _currentNavIndex = 0;
 
   List<PillNavItem> _chatsNavItems(AppLocalizations l10n) => [
-    PillNavItem(icon: Symbols.chat_bubble, label: l10n.chatListNavChats),
-    PillNavItem(icon: Symbols.call, label: l10n.chatListNavCalls),
-    PillNavItem(icon: Symbols.person_pin, label: l10n.chatListNavContacts),
+    PillNavItem(
+      icon: Symbols.chat_bubble,
+      label: l10n.chatListNavChats,
+      spotlightId: SpotlightIds.navChats,
+    ),
+    PillNavItem(
+      icon: Symbols.call,
+      label: l10n.chatListNavCalls,
+      spotlightId: SpotlightIds.navCalls,
+    ),
+    PillNavItem(
+      icon: Symbols.person_pin,
+      label: l10n.chatListNavContacts,
+      spotlightId: SpotlightIds.navContacts,
+    ),
     PillNavItem(
       icon: Symbols.settings,
       label: l10n.attachSheetSettings,
       longPressable: true,
       animationAsset: AppAnimations.settings,
+      spotlightId: SpotlightIds.navSettings,
     ),
   ];
 
@@ -341,6 +360,7 @@ class _ChatListScreenState extends State<ChatListScreen>
   bool _isFabOpen = false;
   bool _storiesAnimClosing = false;
   Timer? _contactRebuildTimer;
+  Timer? _dayRolloverTimer;
   bool _deferReloads = false;
   bool _reloadQueued = false;
   bool _reloadInFlight = false;
@@ -877,6 +897,13 @@ class _ChatListScreenState extends State<ChatListScreen>
     _clearSelection();
   }
 
+  Future<void> _onAddToFolderTap() async {
+    final chatIds = _selectedChatObjects().map((c) => c.id).toList();
+    if (chatIds.isEmpty) return;
+    _clearSelection();
+    await showChatFoldersSheet(context, chatIds: chatIds);
+  }
+
   Future<void> _onMuteTap() async {
     final selected = _selectedChatObjects();
     if (selected.isEmpty) return;
@@ -1201,6 +1228,7 @@ class _ChatListScreenState extends State<ChatListScreen>
       ChatListScreen._root = this;
     }
     _initShare();
+    _scheduleDayRollover();
     _fabController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 350),
@@ -1735,6 +1763,16 @@ class _ChatListScreenState extends State<ChatListScreen>
     }
   }
 
+  void _scheduleDayRollover() {
+    final now = DateTime.now();
+    final nextMidnight = DateTime(now.year, now.month, now.day + 1);
+    _dayRolloverTimer = Timer(nextMidnight.difference(now), () {
+      if (!mounted) return;
+      setState(() => _tilesRevision++);
+      _scheduleDayRollover();
+    });
+  }
+
   void _scheduleContactRebuild() {
     if (!mounted) return;
     _contactRebuildTimer?.cancel();
@@ -1913,7 +1951,10 @@ class _ChatListScreenState extends State<ChatListScreen>
 
   String _formatTime(int? timestamp) {
     if (timestamp == null || timestamp == 0) return '';
-    return formatClock(DateTime.fromMillisecondsSinceEpoch(timestamp));
+    return formatChatListStamp(
+      AppLocalizations.of(context)!,
+      DateTime.fromMillisecondsSinceEpoch(timestamp),
+    );
   }
 
   void _onStoriesRevealTick() {
@@ -2133,6 +2174,7 @@ class _ChatListScreenState extends State<ChatListScreen>
       c.dispose();
     }
     _contactRebuildTimer?.cancel();
+    _dayRolloverTimer?.cancel();
     _storiesUi.dispose();
     _navDragDx.dispose();
     super.dispose();
@@ -2156,6 +2198,24 @@ class _ChatListScreenState extends State<ChatListScreen>
     return _currentNavIndex.toDouble();
   }
 
+  double _navPageShift(int index, double position) {
+    final from = _navPageAnimStart.round();
+    final to = _navPageAnimEnd.round();
+    final skipsTabs =
+        !_navDragging &&
+        _navPageAnimController.isAnimating &&
+        (to - from).abs() > 1;
+    if (!skipsTabs) return index - position;
+    final progress =
+        ((position - _navPageAnimStart) /
+                (_navPageAnimEnd - _navPageAnimStart))
+            .clamp(0.0, 1.0);
+    final direction = (to - from).sign.toDouble();
+    if (index == from) return -progress * direction;
+    if (index == to) return (1 - progress) * direction;
+    return index < from ? -2.0 : 2.0;
+  }
+
   void _onNavTabSelected(int index) {
     if (index == _currentNavIndex && !_navPageAnimController.isAnimating) {
       return;
@@ -2172,7 +2232,11 @@ class _ChatListScreenState extends State<ChatListScreen>
     _navPageAnimEnd = index.toDouble();
     setState(() => _currentNavIndex = index);
     activeNavTab.value = index;
-    _navPageAnimController.forward(from: 0);
+    if (AppMotion.enabled.value) {
+      _navPageAnimController.forward(from: 0);
+    } else {
+      _navPageAnimController.value = 1.0;
+    }
     if (index == 0) _scheduleInformerPresentation();
   }
 
@@ -2268,32 +2332,61 @@ class _ChatListScreenState extends State<ChatListScreen>
     }
   }
 
+  Future<void> _openWhatsNew(String version) {
+    Haptics.tap();
+    return showWhatsNewSheet(context, version);
+  }
+
+  Widget _buildWhatsNewBanner(String version) {
+    final l10n = AppLocalizations.of(context)!;
+    final banner = InformerBanner(
+      id: 'whats-new-$version',
+      title: l10n.whatsNewBannerTitle(version),
+      description: l10n.whatsNewBannerSubtitle,
+    );
+    return InformerBannerTile(
+      key: ValueKey(banner.id),
+      banner: banner,
+      onTap: () => unawaited(_openWhatsNew(version)),
+      onClose: () => unawaited(WhatsNew.dismiss()),
+    );
+  }
+
   Widget _buildInformerBanner() {
-    return ValueListenableBuilder<InformerBanner?>(
-      valueListenable: bannersModule.activeBanner,
-      builder: (context, banner, _) {
-        return ClipRect(
-          child: AnimatedSize(
-            duration: const Duration(milliseconds: 260),
-            curve: Curves.easeOutCubic,
-            alignment: Alignment.topCenter,
-            child: banner == null
-                ? const SizedBox(width: double.infinity)
-                : InformerBannerTile(
-                    key: ValueKey(banner.id),
-                    banner: banner,
-                    animojiLoader: animojiModule.fetchById,
-                    onPresented: _markInformerPresented,
-                    onTap: banner.isClickable
-                        ? () => unawaited(_openInformer(banner))
-                        : null,
-                    onClose: banner.hidesCloseButton
-                        ? null
-                        : () => unawaited(_closeInformer(banner)),
-                  ),
+    return ValueListenableBuilder<String?>(
+      valueListenable: WhatsNew.pendingVersion,
+      builder: (context, whatsNew, _) =>
+          ValueListenableBuilder<InformerBanner?>(
+            valueListenable: bannersModule.activeBanner,
+            builder: (context, banner, _) {
+              return ClipRect(
+                child: AnimatedSize(
+                  duration: const Duration(milliseconds: 260),
+                  curve: Curves.easeOutCubic,
+                  alignment: Alignment.topCenter,
+                  child: whatsNew != null
+                      ? _buildWhatsNewBanner(whatsNew)
+                      : banner == null
+                      ? const SizedBox(width: double.infinity)
+                      : InformerBannerTile(
+                          key: ValueKey(banner.id),
+                          banner: banner,
+                          animojiLoader: animojiModule.fetchById,
+                          note: AppLocalizations.of(
+                            context,
+                          )!.informerBannerServerNote,
+                          onPresented: _markInformerPresented,
+                          onTap: banner.isClickable
+                              ? () => unawaited(_openInformer(banner))
+                              : null,
+                          onClose: banner.hidesCloseButton
+                              ? null
+                              : () => unawaited(_closeInformer(banner)),
+                        ),
+                ),
+              );
+            },
           ),
-        );
-      },
     );
   }
 
@@ -2305,6 +2398,19 @@ class _ChatListScreenState extends State<ChatListScreen>
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          const SizedBox(
+            height: 0,
+            child: OverflowBox(
+              alignment: Alignment.topCenter,
+              minHeight: 220,
+              maxHeight: 220,
+              child: SeasonalSnowLayer(
+                flakeCount: 12,
+                seed: 1203,
+                opacity: 0.72,
+              ),
+            ),
+          ),
           ListenableBuilder(
             listenable: _storiesUi,
             builder: (context, _) => ClipRect(
@@ -3129,38 +3235,26 @@ class _ChatListScreenState extends State<ChatListScreen>
                   child: SizedBox(
                     width: pageW,
                     height: pageH,
-                    child: OverflowBox(
-                      alignment: Alignment.topLeft,
-                      maxWidth: pageW * 4,
-                      maxHeight: pageH,
-                      child: SizedBox(
-                        width: pageW * 4,
-                        height: pageH,
-                        child: AnimatedBuilder(
-                          animation: Listenable.merge([
-                            _navPageAnimController,
-                            _navDragDx,
-                          ]),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              page(0, _getChatsBody(context)),
-                              for (var i = 1; i <= 3; i++)
-                                page(i, _navTab(i, contentBottomPadding)),
-                            ],
-                          ),
-                          builder: (context, child) {
-                            final pageDisplayT = _effectivePageNavRowT(
-                              inactiveWidth: inactiveWidth,
-                              bubbleLeftForIndex: bubbleLeftForPageT,
-                            );
-                            return Transform.translate(
-                              offset: Offset(-pageDisplayT * pageW, 0),
+                    child: Stack(
+                      children: [
+                        for (var i = 0; i <= 3; i++)
+                          AnimatedBuilder(
+                            animation: pageMotion,
+                            child: page(
+                              i,
+                              i == 0
+                                  ? _getChatsBody(context)
+                                  : _navTab(i, contentBottomPadding),
+                            ),
+                            builder: (context, child) => Transform.translate(
+                              offset: Offset(
+                                _navPageShift(i, pagePosition()) * pageW,
+                                0,
+                              ),
                               child: child,
-                            );
-                          },
-                        ),
-                      ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                 ),
@@ -3251,8 +3345,10 @@ class _ChatListScreenState extends State<ChatListScreen>
                                             NavPillMaterial.isFrost(navStyle);
                                         return GlossyPill(
                                           onTap: _toggleFab,
-                                          color: frost || liquid
+                                          color: liquid
                                               ? AppFrost.glassTint(cs)
+                                              : frost
+                                              ? AppFrost.controlTint(cs)
                                               : cs.primaryContainer,
                                           blurSigma: frost
                                               ? AppFrost.sigma
@@ -3518,6 +3614,11 @@ class _ChatListScreenState extends State<ChatListScreen>
                     color: cs.onSurface,
                   ),
                   onPressed: selected.isEmpty ? null : _onPinTap,
+                ),
+                IconButton(
+                  icon: Icon(Symbols.drive_file_move, color: cs.onSurface),
+                  tooltip: AppLocalizations.of(context)!.chatFoldersAddTo,
+                  onPressed: selected.isEmpty ? null : _onAddToFolderTap,
                 ),
                 IconButton(
                   icon: Icon(
@@ -4263,9 +4364,10 @@ class _ChatListScreenState extends State<ChatListScreen>
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: SizedBox(
-                    height: 48,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 48),
                     child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Padding(
@@ -4630,6 +4732,7 @@ class _ChatListScreenState extends State<ChatListScreen>
     final record = await pushSwipeable<DownloadRecord>(
       context,
       (_) => const DownloadsScreen(),
+      settings: const RouteSettings(name: DownloadsScreen.routeName),
     );
     if (record == null || !mounted) return;
     await _openDownloadedMessage(record);

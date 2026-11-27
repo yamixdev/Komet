@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import '../../../core/storage/app_database.dart';
+import '../../../core/utils/parse.dart';
 
 // #***! модели аккаунта, авторизация приватность сессии
 int? _coerceAccountId(dynamic value) {
@@ -48,6 +49,26 @@ int? extractAccountId(dynamic response) {
 
   return _coerceAccountId(response['accountId']) ??
       _coerceAccountId(response['account_id']);
+}
+
+typedef AccountIdByPhoneLookup = Future<int?> Function(String phone);
+
+// #***! LOGIN не всегда возвращает profile для уже известного серверу токена.
+// В таком случае review-вход может восстановить id по номеру, который всё равно
+// известен из специального сценария авторизации.
+Future<int?> resolveLoginAccountId(
+  dynamic response, {
+  String? phone,
+  AccountIdByPhoneLookup? lookupByPhone,
+}) async {
+  final embedded = extractAccountId(response);
+  if (embedded != null) return embedded;
+
+  final phoneHint = phone?.trim();
+  if (phoneHint == null || phoneHint.isEmpty || lookupByPhone == null) {
+    return null;
+  }
+  return lookupByPhone(phoneHint);
 }
 
 // #***! описание формы ответа для лога когда id не нашли
@@ -338,8 +359,70 @@ class WrongPasswordException implements Exception {
 // #***! временный токен сценария авторизации
 class RequestCodeResult {
   final String token;
+  final CallOutParams? callOut;
 
-  const RequestCodeResult({required this.token});
+  const RequestCodeResult({required this.token, this.callOut});
+}
+
+class CallOutParams {
+  final String trackId;
+  final Duration ttl;
+  final Duration pollingInterval;
+
+  const CallOutParams({
+    required this.trackId,
+    required this.ttl,
+    required this.pollingInterval,
+  });
+
+  static CallOutParams? tryParse(Object? raw) {
+    if (raw is! Map) return null;
+    final trackId = raw['trackId'];
+    final ttl = parseIntOrNull(raw['ttl']);
+    final interval = parseIntOrNull(raw['pollingInterval']);
+    if (trackId is! String || trackId.isEmpty) return null;
+    if (ttl == null || ttl <= 0 || interval == null || interval <= 0) {
+      return null;
+    }
+    return CallOutParams(
+      trackId: trackId,
+      ttl: Duration(milliseconds: ttl),
+      pollingInterval: Duration(milliseconds: interval),
+    );
+  }
+}
+
+enum CallOutStatus {
+  numberNotAssigned(0),
+  numberAssigned(1),
+  verificationPassed(2),
+  verificationTimeout(3);
+
+  const CallOutStatus(this.code);
+  final int code;
+
+  static CallOutStatus? fromCode(Object? raw) {
+    final code = parseIntOrNull(raw);
+    for (final status in values) {
+      if (status.code == code) return status;
+    }
+    return null;
+  }
+}
+
+class CallOutCheck {
+  final CallOutStatus? status;
+  final String? callNumber;
+
+  const CallOutCheck({required this.status, this.callNumber});
+
+  factory CallOutCheck.fromPayload(Map<dynamic, dynamic> payload) {
+    final number = payload['callNumber'];
+    return CallOutCheck(
+      status: CallOutStatus.fromCode(payload['status']),
+      callNumber: number is String && number.isNotEmpty ? number : null,
+    );
+  }
 }
 
 class PresetAvatar {
