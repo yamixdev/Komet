@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:komet/core/config/ios_release.dart';
 import 'package:komet/frontend/screens/contacts/contacts_tab.dart';

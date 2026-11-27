@@ -1,10 +1,11 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:komet/core/config/app_bottom_navigation_style.dart';
 import 'package:komet/core/config/app_visual_style.dart';
 import 'package:komet/core/utils/haptics.dart';
 import 'package:komet/frontend/widgets/compact_bottom_navigation_bar.dart';
 import 'package:komet/frontend/widgets/main_navigation_items.dart';
+import 'package:komet/l10n/app_localization_delegates.dart';
 import 'package:komet/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -46,7 +47,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           locale: const Locale('ru'),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: appLocalizationDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: StatefulBuilder(
             builder: (context, setState) => Scaffold(

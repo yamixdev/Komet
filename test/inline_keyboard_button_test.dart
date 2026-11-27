@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:komet/backend/modules/messages.dart';
 import 'package:komet/frontend/widgets/message_bubble.dart';
+import 'package:komet/l10n/app_localization_delegates.dart';
 import 'package:komet/l10n/app_localizations.dart';
 
 const int _me = 1;
@@ -66,7 +67,7 @@ Future<void> _pump(WidgetTester tester, CachedMessage message) async {
   await tester.pumpWidget(
     MaterialApp(
       locale: const Locale('ru'),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      localizationsDelegates: appLocalizationDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         body: Align(

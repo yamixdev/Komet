@@ -1,9 +1,10 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:komet/backend/modules/messages.dart';
 import 'package:komet/frontend/screens/chats/chat/message_media_draft.dart';
 import 'package:komet/frontend/screens/chats/chat/view/message_row_widgets.dart';
 import 'package:komet/frontend/widgets/attachment/bubbles/bubble_context.dart';
+import 'package:komet/l10n/app_localization_delegates.dart';
 import 'package:komet/l10n/app_localizations.dart';
 import 'package:komet/models/attachment.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -74,7 +75,7 @@ void main() {
 
   testWidgets('media meta marks an edited message', (tester) async {
     Widget meta(String? status) => MaterialApp(
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      localizationsDelegates: appLocalizationDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       locale: const Locale('ru'),
       home: Builder(
@@ -111,7 +112,7 @@ void main() {
     ) async {
       await tester.pumpWidget(
         MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: appLocalizationDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           locale: const Locale('ru'),
           home: Builder(

@@ -7,7 +7,7 @@ import 'dart:ui' show lerpDouble;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart' show listEquals, setEquals;
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:komet/main.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import '../contacts/edit_contact_sheet.dart';

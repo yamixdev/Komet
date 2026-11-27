@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:komet/frontend/screens/chats/chat_admin/admin_section.dart';
 import 'package:komet/frontend/screens/chats/chat_admin/chat_admin_state.dart';
@@ -10,6 +10,7 @@ import 'package:komet/frontend/screens/chats/chat_admin/member_actions.dart';
 import 'package:komet/frontend/screens/chats/chat_admin/member_permissions_screen.dart';
 import 'package:komet/frontend/screens/chats/chat_admin/ownership_transfer.dart';
 import 'package:komet/frontend/widgets/settings_card.dart';
+import 'package:komet/l10n/app_localization_delegates.dart';
 import 'package:komet/l10n/app_localizations.dart';
 import 'package:komet/main.dart' show api;
 import 'package:komet/models/chat_info.dart';
@@ -50,7 +51,7 @@ Future<void> _pump(WidgetTester tester, Widget home) async {
   await tester.pumpWidget(
     MaterialApp(
       locale: const Locale('ru'),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      localizationsDelegates: appLocalizationDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: home,
     ),

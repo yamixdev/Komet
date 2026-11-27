@@ -4,7 +4,7 @@ import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:video_player/video_player.dart';
@@ -1684,8 +1684,8 @@ class _VideoPlaybackSession extends ChangeNotifier {
     required this.initialQuality,
     required this.loadSources,
     required this.userAgentProvider,
-    required bool active,
-  }) : _active = active {
+    required this._active,
+  }) {
     unawaited(_prepare());
   }
 

@@ -1,7 +1,7 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:komet/backend/modules/messages.dart' show CachedMessage;
 import 'package:komet/core/config/app_chat_chrome.dart';
 import 'package:komet/core/config/app_frost.dart';
@@ -14,7 +14,7 @@ import '../chat_search_controller.dart';
 
 class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
   static const double _glossyHeaderHeight = 76.0;
-  static const double _glossySearchHeight = 58.0;
+  static const double glossySearchHeight = 58.0;
   static const double _edgeFadeHeight = 24.0;
 
   final ColorScheme cs;
@@ -109,7 +109,7 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
   double get _height {
     final searchT = Curves.easeOut.transform(searchAnim.value.clamp(0.0, 1.0));
     return glossyChrome
-        ? ui.lerpDouble(_glossyHeaderHeight, _glossySearchHeight, searchT)!
+        ? ui.lerpDouble(_glossyHeaderHeight, glossySearchHeight, searchT)!
         : kToolbarHeight;
   }
 

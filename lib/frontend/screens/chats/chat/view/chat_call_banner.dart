@@ -1,6 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart' show listEquals;
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:komet/backend/modules/messages.dart' show ContactCache;
 import 'package:komet/core/config/app_frost.dart';
 import 'package:komet/frontend/widgets/liquid_glass.dart';

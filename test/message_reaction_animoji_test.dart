@@ -1,9 +1,10 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:komet/backend/modules/messages.dart';
 import 'package:komet/frontend/widgets/lottie_image.dart';
 import 'package:komet/frontend/widgets/message_bubble.dart';
+import 'package:komet/l10n/app_localization_delegates.dart';
 import 'package:komet/l10n/app_localizations.dart';
 import 'package:komet/models/animoji.dart';
 
@@ -36,7 +37,7 @@ Future<void> _pumpBubble(
   await tester.pumpWidget(
     MaterialApp(
       locale: const Locale('ru'),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      localizationsDelegates: appLocalizationDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         body: MessageBubble(

@@ -1,11 +1,12 @@
 import 'dart:io';
 import 'dart:ui' as ui;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:komet/frontend/widgets/attachment/attachment_sheet.dart';
 import 'package:komet/frontend/widgets/attachment/avatar_editor.dart';
 import 'package:komet/frontend/widgets/attachment/editor_common.dart';
+import 'package:komet/l10n/app_localization_delegates.dart';
 import 'package:komet/l10n/app_localizations.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -14,7 +15,7 @@ const _square = Rect.fromLTWH(50, 100, 200, 200);
 
 Widget _app(Widget home) => MaterialApp(
   locale: const Locale('ru'),
-  localizationsDelegates: AppLocalizations.localizationsDelegates,
+  localizationsDelegates: appLocalizationDelegates,
   supportedLocales: AppLocalizations.supportedLocales,
   home: home,
 );

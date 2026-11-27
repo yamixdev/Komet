@@ -9,8 +9,7 @@ import '../../../core/utils/logger.dart';
 enum CallOutPhase { waitingForNumber, awaitingCall, verified, expired, failed }
 
 class CallOutController extends ChangeNotifier {
-  CallOutController({required CallOutParams params, required this.check})
-    : _params = params;
+  CallOutController({required this._params, required this.check});
 
   final Future<CallOutCheck> Function(String trackId) check;
 

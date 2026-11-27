@@ -319,6 +319,37 @@ void main() {
       }
     },
   );
+  test('plugin HTTPS starts TLS on the socket before sending HTTP', () async {
+    final original = HttpOverrides.current;
+    HttpOverrides.global = null;
+    final loopback = InternetAddress.loopbackIPv4;
+    final server = await ServerSocket.bind(loopback, 0);
+    final firstByte = Completer<int>();
+    final subscription = server.listen((socket) async {
+      try {
+        firstByte.complete((await socket.first).first);
+      } finally {
+        socket.destroy();
+      }
+    });
+    final client = PluginNetworkPolicy.createClient(
+      allowHttpForTesting: true,
+      lookup: (_) async => [loopback],
+    );
+    try {
+      final uri = Uri.https('synthetic.example.invalid:${server.port}', '/');
+      await expectLater(() async {
+        final request = await client.getUrl(uri);
+        await request.close();
+      }(), throwsA(isA<IOException>()));
+      expect(await firstByte.future.timeout(const Duration(seconds: 3)), 0x16);
+    } finally {
+      client.close(force: true);
+      await subscription.cancel();
+      await server.close();
+      HttpOverrides.global = original;
+    }
+  });
   test('mini-app bridge refuses plain http origins', () {
     for (final url in [
       'http://mini.example.invalid/start',

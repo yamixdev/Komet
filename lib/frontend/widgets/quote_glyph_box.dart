@@ -94,12 +94,10 @@ class QuoteGlyph {
 
 class RenderQuoteGlyphBox extends RenderShiftedBox {
   RenderQuoteGlyphBox({
-    required QuoteGlyph glyph,
-    required TextDirection textDirection,
+    required this._glyph,
+    required this._textDirection,
     RenderBox? child,
-  }) : _glyph = glyph,
-       _textDirection = textDirection,
-       super(child);
+  }) : super(child);
 
   final TextPainter _painter = TextPainter();
   final LayerHandle<ClipRectLayer> _clipLayer = LayerHandle<ClipRectLayer>();

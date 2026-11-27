@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:komet/core/security/app_lock.dart';
 import 'package:komet/frontend/screens/lock/app_lock_layer.dart';
+import 'package:komet/l10n/app_localization_delegates.dart';
 import 'package:komet/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -10,7 +11,7 @@ Future<void> _pumpApp(WidgetTester tester) async {
   await tester.pumpWidget(
     MaterialApp(
       locale: const Locale('ru'),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      localizationsDelegates: appLocalizationDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       builder: (context, child) => AppLockLayer(child: child!),
       home: const Scaffold(body: Center(child: Text('synthetic chats'))),

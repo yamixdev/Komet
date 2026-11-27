@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:komet/backend/modules/messages.dart';
 import 'package:komet/frontend/screens/chats/chat/view/message_row_widgets.dart';
+import 'package:komet/l10n/app_localization_delegates.dart';
 import 'package:komet/l10n/app_localizations.dart';
 
 CachedMessage _message({int senderId = 101, String status = 'error'}) =>
@@ -17,7 +18,7 @@ CachedMessage _message({int senderId = 101, String status = 'error'}) =>
 
 Widget _app(Widget child) => MaterialApp(
   locale: const Locale('ru'),
-  localizationsDelegates: AppLocalizations.localizationsDelegates,
+  localizationsDelegates: appLocalizationDelegates,
   supportedLocales: AppLocalizations.supportedLocales,
   home: Scaffold(body: Center(child: child)),
 );

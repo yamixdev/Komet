@@ -50,20 +50,7 @@ vec3 sampleBackdrop(vec2 coord) {
   return texture(uBackdrop, clamp(uv, vec2(0.0), vec2(1.0))).rgb;
 }
 
-void main() {
-  vec2 fragCoord = FlutterFragCoord().xy;
-  vec2 halfSize = uRectSize * 0.5;
-  vec2 center = uRectOrigin + halfSize;
-  vec2 p = fragCoord - center;
-
-  float radius = min(uRadius, min(halfSize.x, halfSize.y));
-  float sd = roundedBoxSdf(p, halfSize, radius);
-
-  if (sd > 0.0) {
-    fragColor = vec4(sampleBackdrop(fragCoord), 1.0);
-    return;
-  }
-
+vec3 refractBackdrop(vec2 fragCoord, vec2 p, vec2 halfSize, float radius, float sd) {
   vec2 normal = surfaceNormal(p, halfSize, radius);
   float reach = max(uSpread * min(halfSize.x, halfSize.y), 1.0);
   float shift = displacement(sd, reach);
@@ -100,5 +87,20 @@ void main() {
   color += vec3(highlight);
   color = mix(color, color * 0.72, shade);
 
-  fragColor = vec4(clamp(color, vec3(0.0), vec3(1.0)), 1.0);
+  return clamp(color, vec3(0.0), vec3(1.0));
+}
+
+void main() {
+  vec2 fragCoord = FlutterFragCoord().xy;
+  vec2 halfSize = uRectSize * 0.5;
+  vec2 center = uRectOrigin + halfSize;
+  vec2 p = fragCoord - center;
+  float radius = min(uRadius, min(halfSize.x, halfSize.y));
+  float sd = roundedBoxSdf(p, halfSize, radius);
+
+  if (sd > 0.0) {
+    fragColor = vec4(sampleBackdrop(fragCoord), 1.0);
+  } else {
+    fragColor = vec4(refractBackdrop(fragCoord, p, halfSize, radius, sd), 1.0);
+  }
 }

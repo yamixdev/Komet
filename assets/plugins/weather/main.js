@@ -18,9 +18,15 @@ function dayLabel(date, index) {
 export async function weather(context) {
   const city = context.arguments.city.trim();
   const url = `https://wttr.in/${encodeURIComponent(city)}?format=j1&lang=ru`;
-  const response = await network.fetch(url, {
-    headers: { Accept: 'application/json' }
-  });
+  let response;
+  try {
+    response = await network.fetch(url, {
+      headers: { Accept: 'application/json' }
+    });
+  } catch (_) {
+    await ui.notify('Не удалось связаться с wttr.in. Проверьте подключение или настройки VPN.');
+    return;
+  }
   if (response.status !== 200) {
     await ui.notify(`wttr.in вернул HTTP ${response.status}`);
     return;

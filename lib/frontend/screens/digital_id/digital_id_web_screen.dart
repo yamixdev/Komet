@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart' show kDebugMode;
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 import '../../../backend/modules/webapp.dart' show WebAppLaunch;

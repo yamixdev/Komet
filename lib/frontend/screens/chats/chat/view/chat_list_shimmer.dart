@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class ChatShimmerTile extends StatelessWidget {
   const ChatShimmerTile({super.key, required this.shimmer});

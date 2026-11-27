@@ -1,9 +1,10 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:komet/core/calls/active_call.dart';
 import 'package:komet/core/calls/call_session.dart';
 import 'package:komet/core/calls/ws2_signaling.dart';
 import 'package:komet/frontend/widgets/floating_call_badge.dart';
+import 'package:komet/l10n/app_localization_delegates.dart';
 import 'package:komet/l10n/app_localizations.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -16,7 +17,7 @@ CallSession _session() => CallSession(
 
 Widget _host() => MaterialApp(
   locale: const Locale('ru'),
-  localizationsDelegates: AppLocalizations.localizationsDelegates,
+  localizationsDelegates: appLocalizationDelegates,
   supportedLocales: AppLocalizations.supportedLocales,
   builder: (context, child) => Stack(
     children: [

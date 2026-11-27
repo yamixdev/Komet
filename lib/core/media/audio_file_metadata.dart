@@ -27,7 +27,11 @@ class AudioFileMetadataInfo {
 abstract final class AudioFileMetadata {
   static const int _cacheVersion = 2;
   static const int _artworkMaxEdge = 160;
-  static final Map<String, Future<AudioFileMetadataInfo?>> _cache = {};
+  static final _inFlight =
+      <
+        (String cacheName, String path, int size),
+        Future<AudioFileMetadataInfo>
+      >{};
   static int _parseCount = 0;
 
   static Future<AudioFileMetadataInfo?> read(
@@ -36,8 +40,18 @@ abstract final class AudioFileMetadata {
   }) async {
     try {
       final stat = await file.stat();
-      final key = '${file.path}:${stat.size}';
-      return await _cache.putIfAbsent(key, () => _read(file, cacheName, stat));
+      if (stat.type != FileSystemEntityType.file) return null;
+      final key = (cacheName, file.path, stat.size);
+      final inFlight = _inFlight[key];
+      if (inFlight != null) return await inFlight;
+
+      final load = _read(file, cacheName, stat);
+      _inFlight[key] = load;
+      try {
+        return await load;
+      } finally {
+        _inFlight.remove(key);
+      }
     } catch (_) {
       return null;
     }
@@ -58,15 +72,11 @@ abstract final class AudioFileMetadata {
   static int get parseCountForTesting => _parseCount;
 
   @visibleForTesting
-  static void resetMemoryForTesting() => _cache.clear();
-
-  @visibleForTesting
   static void resetForTesting() {
-    _cache.clear();
     _parseCount = 0;
   }
 
-  static Future<AudioFileMetadataInfo?> _read(
+  static Future<AudioFileMetadataInfo> _read(
     File file,
     String cacheName,
     FileStat stat,

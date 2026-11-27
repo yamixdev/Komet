@@ -1,7 +1,7 @@
 import 'dart:async';
 import '../../../../core/crypto/outgoing_message_policy.dart';
 import 'dart:convert' show base64Encode;
-import 'dart:io' show File;
+import 'dart:io' show File, FileSystemException;
 
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
@@ -165,7 +165,8 @@ class ChatMediaSendController {
       chatId: _chatId,
     );
     final caption = failed.text ?? '';
-    _discard(failed);
+    bool replaceFailed() => _discardForRetry(failed);
+
     switch (attachments.first) {
       case PhotoAttachment():
         await _sendPhotoAlbum(
@@ -176,16 +177,20 @@ class ChatMediaSendController {
           caption,
           waitForUpload: false,
           reply: reply,
+          replaceFailed: replaceFailed,
         );
       case VideoAttachment(videoType: 1, :final localPath?, :final duration):
+        if (!replaceFailed()) return;
         _sendVideoNoteFile(File(localPath), duration ?? 0, reply);
       case VideoAttachment(:final localPath?):
         await sendVideo(
           PickedPhoto(item: GalleryItem.fromFile(File(localPath))),
           caption,
           reply: reply,
+          replaceFailed: replaceFailed,
         );
       case AudioAttachment(:final localPath?, :final duration, :final waveform):
+        if (!replaceFailed()) return;
         _sendVoiceFile(
           File(localPath),
           duration ?? 0,
@@ -194,20 +199,30 @@ class ChatMediaSendController {
         );
       case FileAttachment(:final localPath?, :final name, :final size):
         final source = File(localPath);
+        final int sourceSize;
+        try {
+          sourceSize = size ?? await source.length();
+        } on FileSystemException {
+          if (isMounted()) notify(_l10n.chatRetryFileMissing);
+          return;
+        }
+        if (!replaceFailed()) return;
         await _uploadAsFile(
           source: source,
           filename: name ?? source.uri.pathSegments.last,
-          size: size ?? await source.length(),
+          size: sourceSize,
           text: failed.text,
           reply: reply,
         );
       case final FileAttachment stored:
+        if (!replaceFailed()) return;
         await _sendStoredFile(
           stored,
           reply: reply,
           beforeSend: _unencryptedSendGuard(),
         );
       case final StickerAttachment sticker:
+        if (!replaceFailed()) return;
         await _sendAttach(
           [sticker],
           _stickerSender(int.parse('${sticker.stickerId}')),
@@ -215,6 +230,7 @@ class ChatMediaSendController {
           beforeSend: _unencryptedSendGuard(),
         );
       case final ContactAttachment contact:
+        if (!replaceFailed()) return;
         await _sendAttach(
           [contact],
           _contactSender(contact.contactId!),
@@ -222,6 +238,7 @@ class ChatMediaSendController {
           beforeSend: _unencryptedSendGuard(),
         );
       case final LocationAttachment location:
+        if (!replaceFailed()) return;
         await _sendAttach(
           [location],
           _locationSender(
@@ -237,12 +254,22 @@ class ChatMediaSendController {
     }
   }
 
-  void _discard(CachedMessage failed) {
+  bool _discardForRetry(CachedMessage failed) {
+    if (!isMounted() ||
+        _myId != failed.accountId ||
+        _chatId != failed.chatId ||
+        encryptionEnabled()) {
+      return false;
+    }
     final index = chatController.indexOfId(failed.id);
-    if (index != -1) chatController.removeMessageAt(index);
+    if (index == -1 || chatController.messages[index].status != 'error') {
+      return false;
+    }
+    chatController.removeMessageAt(index);
     MessageSessionCache.removeMessage(_myId, _chatId, failed.id);
     unawaited(AppDatabase.deleteMessage(_myId, _chatId, failed.id));
     bumpMessages();
+    return true;
   }
 
   // #***! строку в списке чатов обновляем сами: экран чата к моменту
@@ -736,6 +763,7 @@ class ChatMediaSendController {
     String caption, {
     required bool waitForUpload,
     OutgoingReply? reply,
+    bool Function()? replaceFailed,
   }) async {
     final jobs = <({File file, GalleryItem? item})>[];
     final attachments = <PhotoAttachment>[];
@@ -753,6 +781,7 @@ class ChatMediaSendController {
       );
     }
     if (jobs.isEmpty || !isMounted()) return;
+    if (replaceFailed?.call() == false) return;
 
     final tempId = chatController.nextTempId();
     final unquoted = CachedMessage(
@@ -795,6 +824,7 @@ class ChatMediaSendController {
     String caption, {
     int? scheduledTime,
     OutgoingReply? reply,
+    bool Function()? replaceFailed,
   }) async {
     if (_myId == 0) return;
     if (encryptionEnabled()) {
@@ -836,6 +866,7 @@ class ChatMediaSendController {
     final thumbData = thumbBytes == null || thumbBytes.isEmpty
         ? null
         : 'data:image/jpeg;base64,${base64Encode(thumbBytes)}';
+    if (replaceFailed?.call() == false) return;
 
     final tempId = chatController.nextTempId();
     CachedMessage? placeholder;

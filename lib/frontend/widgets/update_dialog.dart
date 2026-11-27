@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../core/utils/update_checker.dart';
 import '../../core/utils/update_installer.dart';

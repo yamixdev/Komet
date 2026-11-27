@@ -118,10 +118,9 @@ class _MessageEnterBox extends SingleChildRenderObjectWidget {
 
 class _RenderMessageEnter extends RenderProxyBox {
   _RenderMessageEnter({
-    required Animation<double>? animation,
-    required bool hidden,
-  }) : _animation = animation,
-       _hidden = hidden;
+    required this._animation,
+    required this._hidden,
+  });
 
   Animation<double>? _animation;
   set animation(Animation<double>? value) {

@@ -6,7 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:komet/backend/modules/channel_stats.dart';
@@ -582,6 +582,8 @@ class _ChatScreenState extends State<ChatScreen>
   Timer? _shimmerStartTimer;
   bool _previewChat = false;
   bool _subscribing = false;
+  bool _updatingChatMute = false;
+  int _searchJumpEpoch = 0;
   String? _channelLink;
   final ChatController _chatController = ChatController();
   late final ChatScrollNavigator _scrollNav;
@@ -815,6 +817,7 @@ class _ChatScreenState extends State<ChatScreen>
     _search = ChatSearchController(
       chatId: widget.chatId,
       isMounted: () => mounted,
+      onFirstResult: _openSearchResult,
     );
     _textSend = ChatTextSendController(
       chatController: _chatController,
@@ -3281,7 +3284,7 @@ class _ChatScreenState extends State<ChatScreen>
       onPickFile: _pickAndUploadFile,
       onSendFileById: _mediaSend.sendFileById,
       commentsMode: _commentsMode,
-      chatType: widget.chatType,
+      chatType: _isChannel ? 'CHANNEL' : widget.chatType,
       chatId: widget.chatId,
       peerName: widget.name,
       onOpenEncryption: _openEncryptionSettings,
@@ -3313,7 +3316,9 @@ class _ChatScreenState extends State<ChatScreen>
       onPasteMedia: ClipboardMedia.supported ? _handlePasteMedia : null,
       onInsertContent: _insertKeyboardContent,
       isMuted: chat?.isMuted ?? false,
-      onToggleMute: _toggleChatMute,
+      onToggleMute: (anchor) => unawaited(_toggleChatMute(anchor: anchor)),
+      onOpenSearch: _openSearch,
+      updatingMute: _updatingChatMute || chat == null,
       channelSubscribed: !_previewChat,
       canPostToChannel: _canPostToChannel,
       channelSubscribing: _subscribing,
@@ -3935,28 +3940,34 @@ class _ChatScreenState extends State<ChatScreen>
     }
   }
 
-  Future<void> _toggleChatMute() async {
+  Future<void> _toggleChatMute({BuildContext? anchor}) async {
     final current = chat;
-    if (current == null) return;
+    if (current == null || _updatingChatMute) return;
+    final accountId = _myId;
     final muted = current.isMuted;
     final target = muted ? ChatsModule.muteOff : ChatsModule.muteForever;
+    setState(() => _updatingChatMute = true);
     final error = await chats.setChatMute(
       api,
       chatId: widget.chatId,
       dontDisturbUntil: target,
     );
     if (!mounted) return;
-    if (error != null) {
-      showCustomNotification(context, error);
-      return;
+    setState(() {
+      _updatingChatMute = false;
+      if (error == null && _myId == accountId) {
+        chat = chat?.copyWith(dontDisturbUntil: target);
+      }
+    });
+    if (_myId != accountId) return;
+    final l10n = AppLocalizations.of(context)!;
+    final feedback = error ??
+        (muted ? l10n.chatInfoNotificationsOn : l10n.chatInfoNotificationsOff);
+    if (anchor != null && anchor.mounted) {
+      showHintBubble(anchor, feedback);
+    } else {
+      showCustomNotification(context, feedback);
     }
-    setState(() => chat = current.copyWith(dontDisturbUntil: target));
-    showCustomNotification(
-      context,
-      muted
-          ? AppLocalizations.of(context)!.chatInfoNotificationsOn
-          : AppLocalizations.of(context)!.chatInfoNotificationsOff,
-    );
   }
 
   bool _encryptionListening = false;
@@ -4905,7 +4916,11 @@ class _ChatScreenState extends State<ChatScreen>
       return;
     }
     _search.searchMode.value = true;
-    _searchAnim.forward();
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _searchAnim.value = 1;
+    } else {
+      _searchAnim.forward();
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && _search.searchMode.value) _searchFocusNode.requestFocus();
     });
@@ -4913,16 +4928,69 @@ class _ChatScreenState extends State<ChatScreen>
 
   void _closeSearch() {
     if (!_search.searchMode.value) return;
+    _searchJumpEpoch++;
     _searchFocusNode.unfocus();
-    _searchAnim.reverse();
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _searchAnim.value = 0;
+    } else {
+      _searchAnim.reverse();
+    }
     _search.reset();
   }
 
-  Future<void> _openSearchResult(MessageSearchResult result) async {
+  void _backFromSearch() {
+    if (_search.showResults.value) {
+      _search.showResults.value = false;
+      return;
+    }
     _closeSearch();
+  }
+
+  Future<void> _openSearchResult(MessageSearchResult result) async {
+    _searchJumpEpoch++;
     await _scrollNav.goTo(result.id, time: result.time);
   }
 
+  Future<void> _jumpToSearchDate(DateTime date) async {
+    final accountId = _myId;
+    if (accountId == 0 || !_search.searchMode.value) return;
+    final epoch = ++_searchJumpEpoch;
+    final query = _search.searchController.text;
+    final start = DateTime(date.year, date.month, date.day).millisecondsSinceEpoch;
+    bool stillCurrent() =>
+        mounted &&
+        _searchJumpEpoch == epoch &&
+        _search.searchMode.value &&
+        _myId == accountId &&
+        _search.searchController.text == query;
+
+    try {
+      final messages = await messagesModule.fetchHistory(
+        accountId,
+        widget.chatId,
+        fromTime: start,
+        forward: 8,
+        backward: 8,
+      );
+      if (!stillCurrent()) return;
+      final ordered = messages.where((message) => !message.isControl).toList()
+        ..sort((a, b) => a.time.compareTo(b.time));
+      if (ordered.isNotEmpty) {
+        final index = ordered.indexWhere((message) => message.time >= start);
+        final target = index == -1 ? ordered.last : ordered[index];
+        await _scrollNav.goTo(target.id, time: target.time, highlight: false);
+        return;
+      }
+    } catch (error) {
+      logger.w('Could not jump to a search date: $error');
+    }
+    if (mounted && stillCurrent()) {
+      showCustomNotification(
+        context,
+        AppLocalizations.of(context)!.chatScreenMessageNotLoaded,
+      );
+    }
+  }
 
   String _searchSenderName(int senderId) {
     final l10n = AppLocalizations.of(context)!;
@@ -5098,7 +5166,7 @@ class _ChatScreenState extends State<ChatScreen>
               _stickers.hide();
             }
           } else if (_search.searchMode.value) {
-            _closeSearch();
+            _backFromSearch();
           } else if (_textSelection.value != null) {
             _exitTextSelection();
           } else {
@@ -5171,6 +5239,13 @@ class _ChatScreenState extends State<ChatScreen>
                         searchAnim: _searchAnim,
                         search: _search,
                         onOpenSearchResult: _openSearchResult,
+                        onJumpToSearchDate: _jumpToSearchDate,
+                        searchTopInset: underlap
+                            ? MediaQuery.paddingOf(context).top +
+                                  (AppVisualStyle.current.value.glossyChrome
+                                      ? ChatAppBar.glossySearchHeight
+                                      : kToolbarHeight)
+                            : 0,
                         searchSenderName: _searchSenderName,
                         searchSenderAvatar: _searchSenderAvatar,
                         chromeVignette: _chromeVignette,
@@ -5235,7 +5310,7 @@ class _ChatScreenState extends State<ChatScreen>
                         onDeleteSelected: _deleteSelected,
                         search: _search,
                         searchFocusNode: _searchFocusNode,
-                        onCloseSearch: _closeSearch,
+                        onCloseSearch: _backFromSearch,
                       ),
                     ),
                     body: body,

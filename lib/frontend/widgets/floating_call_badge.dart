@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:ui' show lerpDouble;
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart'
     show MediaStream, RTCVideoRenderer, RTCVideoViewObjectFit;
 import 'package:material_symbols_icons/symbols.dart';

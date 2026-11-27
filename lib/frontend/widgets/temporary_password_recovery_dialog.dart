@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../core/storage/temporary_password_recovery.dart';
 import '../../core/storage/token_storage.dart';

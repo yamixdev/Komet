@@ -1,6 +1,6 @@
 import 'dart:ui' as ui;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
 
 import '../../core/config/app_frost.dart';
@@ -196,28 +196,18 @@ class _LiquidGlassBackdrop extends SingleChildRenderObjectWidget {
 
 class _RenderLiquidGlass extends RenderProxyBox {
   _RenderLiquidGlass({
-    required BorderRadius borderRadius,
-    required Color tint,
-    required double blurSigma,
-    required double spread,
-    required double refraction,
-    required double chroma,
-    required double specular,
-    required Offset light,
-    required double tintFeather,
-    required double rimWidth,
-    required double devicePixelRatio,
-  }) : _borderRadius = borderRadius,
-       _tint = tint,
-       _blurSigma = blurSigma,
-       _spread = spread,
-       _refraction = refraction,
-       _chroma = chroma,
-       _specular = specular,
-       _light = light,
-       _tintFeather = tintFeather,
-       _rimWidth = rimWidth,
-       _devicePixelRatio = devicePixelRatio;
+    required this._borderRadius,
+    required this._tint,
+    required this._blurSigma,
+    required this._spread,
+    required this._refraction,
+    required this._chroma,
+    required this._specular,
+    required this._light,
+    required this._tintFeather,
+    required this._rimWidth,
+    required this._devicePixelRatio,
+  });
 
   final LayerHandle<ClipRRectLayer> _blurClipHandle =
       LayerHandle<ClipRRectLayer>();

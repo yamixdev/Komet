@@ -11,10 +11,9 @@ import 'plugin_store.dart';
 
 class PluginUpdater {
   PluginUpdater({
-    PluginInstaller installer = const PluginInstaller(),
+    this._installer = const PluginInstaller(),
     PluginStore? store,
-  }) : _installer = installer,
-       _store = store ?? PluginStore.instance;
+  }) : _store = store ?? PluginStore.instance;
 
   final PluginInstaller _installer;
   final PluginStore _store;

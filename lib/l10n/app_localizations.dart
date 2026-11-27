@@ -1,3 +1,4 @@
+// ignore_for_file: deprecated_member_use
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -11543,8 +11544,68 @@ abstract class AppLocalizations {
   /// No description provided for @searchViewNoResults.
   ///
   /// In en, this message translates to:
-  /// **'Search returned nothing...'**
+  /// **'No messages found'**
   String get searchViewNoResults;
+
+  /// No description provided for @searchViewFailure.
+  ///
+  /// In en, this message translates to:
+  /// **'Search failed'**
+  String get searchViewFailure;
+
+  /// No description provided for @searchViewClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get searchViewClear;
+
+  /// No description provided for @searchViewPosition.
+  ///
+  /// In en, this message translates to:
+  /// **'{position} of {count}'**
+  String searchViewPosition(int position, int count);
+
+  /// No description provided for @searchViewCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} result loaded} other{{count} results loaded}}'**
+  String searchViewCount(int count);
+
+  /// No description provided for @searchViewPrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous result'**
+  String get searchViewPrevious;
+
+  /// No description provided for @searchViewNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next result'**
+  String get searchViewNext;
+
+  /// No description provided for @searchViewList.
+  ///
+  /// In en, this message translates to:
+  /// **'Results list'**
+  String get searchViewList;
+
+  /// No description provided for @searchViewInChat.
+  ///
+  /// In en, this message translates to:
+  /// **'In chat'**
+  String get searchViewInChat;
+
+  /// No description provided for @searchViewChooseDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a date'**
+  String get searchViewChooseDate;
+
+  /// No description provided for @searchViewGoToDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to date'**
+  String get searchViewGoToDate;
 
   /// No description provided for @adaptiveShellSelectChat.
   ///

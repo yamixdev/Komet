@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../contacts/contact_sheet_common.dart';
 import '../../../core/config/app_fonts.dart';

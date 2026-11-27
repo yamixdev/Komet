@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../core/utils/link_opener.dart';
 import '../../core/utils/logger.dart';
@@ -13,8 +13,7 @@ import 'max_link_nav.dart';
 import 'spotlight.dart';
 
 class WhatsNewRunner {
-  WhatsNewRunner(this.document, {Future<void> Function()? closeSheet})
-    : _closeSheet = closeSheet;
+  WhatsNewRunner(this.document, {this._closeSheet});
 
   static const int _maxDepth = 6;
   static const Duration _scroll = Duration(milliseconds: 420);

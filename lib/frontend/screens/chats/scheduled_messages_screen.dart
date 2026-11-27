@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:m3e_collection/m3e_collection.dart'
     show ExpressiveRefreshIndicator;
 import 'package:material_symbols_icons/symbols.dart';

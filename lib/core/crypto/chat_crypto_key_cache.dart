@@ -3,8 +3,7 @@ import 'dart:typed_data';
 // #***! кэш ключей чатов: clear сдвигает поколение, и вывод, начатый до сброса,
 // #***! в кэш уже не попадает
 class ChatCryptoKeyCache {
-  ChatCryptoKeyCache(this._derive, {required void Function(Uint8List key) wipe})
-    : _wipe = wipe;
+  ChatCryptoKeyCache(this._derive, {required this._wipe});
 
   final Future<Uint8List?> Function(int accountId, int chatId) _derive;
   final void Function(Uint8List key) _wipe;

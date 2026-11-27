@@ -1,8 +1,9 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:komet/frontend/screens/chats/chat/view/chat_list_tile.dart';
 import 'package:komet/frontend/widgets/custom_notification.dart';
+import 'package:komet/l10n/app_localization_delegates.dart';
 import 'package:komet/l10n/app_localizations.dart';
 import 'package:komet/frontend/widgets/reply_preview.dart';
 import 'package:komet/frontend/widgets/toast_placement.dart';
@@ -178,7 +179,7 @@ void main() {
     required Widget obstruction,
   }) => MaterialApp(
     locale: const Locale('ru'),
-    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    localizationsDelegates: appLocalizationDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     home: Builder(
       builder: (context) => Scaffold(

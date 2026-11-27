@@ -95,9 +95,25 @@ class PluginNetworkPolicy {
               task.cancel();
               throw const SocketException('Connection cancelled');
             }
-            return await task.socket.timeout(
+            var timedOut = false;
+            final connection = task.socket.then((tcpSocket) async {
+              if (cancelled || timedOut) {
+                tcpSocket.destroy();
+                throw const SocketException('Connection cancelled');
+              }
+              final socket = uri.isScheme('https')
+                  ? await SecureSocket.secure(tcpSocket, host: uri.host)
+                  : tcpSocket;
+              if (cancelled || timedOut) {
+                socket.destroy();
+                throw const SocketException('Connection cancelled');
+              }
+              return socket;
+            });
+            return await connection.timeout(
               const Duration(seconds: 10),
               onTimeout: () {
+                timedOut = true;
                 task.cancel();
                 throw const SocketException('Connection timed out');
               },

@@ -1,10 +1,11 @@
 import 'dart:convert';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:komet/frontend/widgets/attachment/bubbles/edge_stretch_fill.dart';
 import 'package:komet/frontend/widgets/upload_bytes_label.dart';
 import 'package:komet/frontend/widgets/upload_progress_ring.dart';
+import 'package:komet/l10n/app_localization_delegates.dart';
 import 'package:komet/l10n/app_localizations.dart';
 import 'package:komet/models/upload_bytes.dart';
 
@@ -89,7 +90,7 @@ void main() {
     addTearDown(progress.dispose);
     await tester.pumpWidget(
       MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: appLocalizationDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         locale: const Locale('en'),
         home: Center(

@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:math' show exp, ln10, log, max, min, pi, pow, sin;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/scheduler.dart';
 
 import '../../widgets/animated_slash_icon.dart';

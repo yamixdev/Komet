@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:komet/backend/modules/messages.dart';
 import 'package:komet/core/config/komet_settings.dart';
@@ -8,6 +8,7 @@ import 'package:komet/frontend/screens/chats/chat/channel_recommendations.dart';
 import 'package:komet/frontend/screens/chats/chat/view/channel_recommendations_view.dart';
 import 'package:komet/frontend/widgets/message_bubble.dart';
 import 'package:komet/frontend/widgets/small_spinner.dart';
+import 'package:komet/l10n/app_localization_delegates.dart';
 import 'package:komet/l10n/app_localizations.dart';
 import 'package:komet/models/suggested_channel.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -41,7 +42,7 @@ Future<void> _pump(WidgetTester tester, Widget child) async {
   await tester.pumpWidget(
     MaterialApp(
       locale: const Locale('ru'),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      localizationsDelegates: appLocalizationDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         body: Align(alignment: Alignment.bottomCenter, child: child),

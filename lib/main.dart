@@ -2,14 +2,15 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:cupertino_ui/cupertino_ui.dart'
+    show CupertinoPageTransitionsBuilder;
 import 'package:dynamic_color/dynamic_color.dart';
-import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
-import 'package:kolibri/kolibri.dart' show initKolibri;
-import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:kolibri/kolibri.dart' show initKolibri;
+import 'package:komet/l10n/app_localization_delegates.dart';
 import 'package:komet/l10n/app_localizations.dart';
-import 'package:m3e_collection/m3e_collection.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'backend/api.dart';
@@ -42,6 +43,7 @@ import 'core/config/app_spectrum_background.dart';
 import 'core/config/app_bubble_behavior.dart';
 import 'core/config/app_camera.dart';
 import 'core/config/komet_settings.dart';
+import 'core/config/platform_color_scheme.dart';
 import 'core/security/app_lock.dart';
 import 'core/security/archive_lock.dart';
 import 'core/config/launch_flags.dart';
@@ -1036,32 +1038,28 @@ class KometAppState extends State<KometApp>
     _themeCacheLight = light;
     _themeCacheDark = dark;
     final displayFont = AppDisplayFont(AppFonts.displayFamily(_fontId));
-    _lightTheme = withM3ETheme(
-      ThemeData(
-        useMaterial3: true,
-        colorScheme: light,
-        pageTransitionsTheme: _appPageTransitions,
-        progressIndicatorTheme: _expressiveProgressTheme,
-        tooltipTheme: HintBubbleStyle.tooltipTheme(light),
-        extensions: [displayFont],
-        textTheme: AppFonts.textTheme(
-          _fontId,
-          ThemeData(brightness: Brightness.light).textTheme,
-        ),
+    _lightTheme = ThemeData(
+      useMaterial3: true,
+      colorScheme: light,
+      pageTransitionsTheme: _appPageTransitions,
+      progressIndicatorTheme: _expressiveProgressTheme,
+      tooltipTheme: HintBubbleStyle.tooltipTheme(light),
+      extensions: [displayFont],
+      textTheme: AppFonts.textTheme(
+        _fontId,
+        ThemeData(brightness: Brightness.light).textTheme,
       ),
     );
-    _darkTheme = withM3ETheme(
-      ThemeData(
-        useMaterial3: true,
-        colorScheme: dark,
-        pageTransitionsTheme: _appPageTransitions,
-        progressIndicatorTheme: _expressiveProgressTheme,
-        tooltipTheme: HintBubbleStyle.tooltipTheme(dark),
-        extensions: [displayFont],
-        textTheme: AppFonts.textTheme(
-          _fontId,
-          ThemeData(brightness: Brightness.dark).textTheme,
-        ),
+    _darkTheme = ThemeData(
+      useMaterial3: true,
+      colorScheme: dark,
+      pageTransitionsTheme: _appPageTransitions,
+      progressIndicatorTheme: _expressiveProgressTheme,
+      tooltipTheme: HintBubbleStyle.tooltipTheme(dark),
+      extensions: [displayFont],
+      textTheme: AppFonts.textTheme(
+        _fontId,
+        ThemeData(brightness: Brightness.dark).textTheme,
       ),
     );
   }
@@ -1125,7 +1123,9 @@ class KometAppState extends State<KometApp>
   @override
   Widget build(BuildContext context) {
     return DynamicColorBuilder(
-      builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
+      builder: (platformLight, platformDark) {
+        final lightDynamic = platformColorScheme(platformLight);
+        final darkDynamic = platformColorScheme(platformDark);
         return ListenableBuilder(
           listenable: Listenable.merge([
             accentSeed,
@@ -1167,7 +1167,7 @@ class KometAppState extends State<KometApp>
               locale: _locale,
               themeMode: _effectiveThemeMode,
               themeAnimationDuration: Duration.zero,
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              localizationsDelegates: appLocalizationDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               theme: _lightTheme,
               darkTheme: _darkTheme,
@@ -1178,7 +1178,7 @@ class KometAppState extends State<KometApp>
                 KeyboardNavigatorObserver(),
               ],
               builder: (context, child) {
-                return ValueListenableBuilder<double>(
+                final app = ValueListenableBuilder<double>(
                   valueListenable: fontScale,
                   child: child ?? const SizedBox.shrink(),
                   builder: (context, scale, appChild) {
@@ -1253,6 +1253,7 @@ class KometAppState extends State<KometApp>
                     );
                   },
                 );
+                return withLegacyMaterial(app);
               },
               home: const _StartupScreen(),
             );

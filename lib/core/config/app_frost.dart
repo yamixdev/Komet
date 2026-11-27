@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 // #***! константы матового стекла для всех панелей
 class AppFrost {

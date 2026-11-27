@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:komet/l10n/app_localization_delegates.dart';
 import 'package:komet/l10n/app_localizations.dart';
 import 'package:image/image.dart' as img;
 import 'package:komet/backend/modules/messages.dart';
@@ -45,7 +46,7 @@ Future<void> _pumpComposer(WidgetTester tester, PreparedShare share) async {
   await _pumpWithImages(
     tester,
     MaterialApp(
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      localizationsDelegates: appLocalizationDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       locale: const Locale('ru'),
       home: Scaffold(
@@ -204,7 +205,7 @@ void main() {
       await _pumpWithImages(
         tester,
         MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: appLocalizationDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           locale: const Locale('ru'),
           home: Scaffold(

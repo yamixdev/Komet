@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:fjs/fjs.dart';
 import 'package:path/path.dart' as p;
 
+import 'bundled_weather_dns.dart';
 import 'plugin_host.dart';
 import 'plugin_manifest.dart';
 import 'plugin_media_downloader.dart';
@@ -253,7 +254,15 @@ class PluginRuntime {
     if (!const {'GET', 'POST', 'PUT', 'PATCH', 'DELETE'}.contains(method)) {
       throw const FormatException('Неподдерживаемый HTTP-метод');
     }
-    final client = PluginNetworkPolicy.createClient();
+    final isBundledWeather =
+        plugin.origin == PluginOrigin.bundled &&
+        plugin.manifest.id == 'pw.komet.weather' &&
+        method == 'GET' &&
+        uri.host == BundledWeatherDns.host &&
+        uri.port == 443;
+    final client = PluginNetworkPolicy.createClient(
+      lookup: isBundledWeather ? BundledWeatherDns.lookup : null,
+    );
     try {
       final request = await client
           .openUrl(method, uri)

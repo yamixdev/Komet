@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:komet/core/config/countries.dart';
 import 'package:komet/l10n/app_localizations.dart';

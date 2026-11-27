@@ -2491,7 +2491,28 @@
   "metaMarksTypingTime": "This message took about ~{duration} to type",
   "@metaMarksTypingTime": {"placeholders": {"duration": {"type": "String"}}},
   "searchViewHint": "Search...",
-  "searchViewNoResults": "Search returned nothing...",
+  "searchViewNoResults": "No messages found",
+  "searchViewFailure": "Search failed",
+  "searchViewClear": "Clear search",
+  "searchViewPosition": "{position} of {count}",
+  "@searchViewPosition": {
+    "placeholders": {
+      "position": {"type": "int", "format": "decimalPattern"},
+      "count": {"type": "int", "format": "decimalPattern"}
+    }
+  },
+  "searchViewCount": "{count, plural, one{{count} result loaded} other{{count} results loaded}}",
+  "@searchViewCount": {
+    "placeholders": {
+      "count": {"type": "int", "format": "decimalPattern"}
+    }
+  },
+  "searchViewPrevious": "Previous result",
+  "searchViewNext": "Next result",
+  "searchViewList": "Results list",
+  "searchViewInChat": "In chat",
+  "searchViewChooseDate": "Choose a date",
+  "searchViewGoToDate": "Go to date",
   "adaptiveShellSelectChat": "Select a chat",
   "settingsTabPhotoDeleted": "Photo deleted",
   "settingsTabPhotoDeleteFailed": "Couldn't delete the photo: {error}",

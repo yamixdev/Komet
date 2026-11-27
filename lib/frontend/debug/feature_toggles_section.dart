@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../backend/modules/contacts.dart';
 import '../../core/config/app_commands.dart';

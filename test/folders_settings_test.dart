@@ -1,11 +1,12 @@
 import 'dart:io';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:komet/backend/models/chat_folder.dart';
 import 'package:komet/backend/modules/folders.dart';
 import 'package:komet/core/storage/app_database.dart';
 import 'package:komet/frontend/screens/profile/folders_settings_section.dart';
+import 'package:komet/l10n/app_localization_delegates.dart';
 import 'package:komet/l10n/app_localizations.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
@@ -79,7 +80,7 @@ Future<void> _pumpScreen(WidgetTester tester) async {
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('ru'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: appLocalizationDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: ListView(children: const [FoldersSettingsSection()]),

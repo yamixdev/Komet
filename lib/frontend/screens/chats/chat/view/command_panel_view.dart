@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'package:komet/frontend/commands/commands.dart';
 import 'package:komet/frontend/screens/chats/chat/command_panel_controller.dart';

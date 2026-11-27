@@ -1,10 +1,11 @@
 import 'dart:ui' as ui;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:komet/frontend/widgets/attachment/editor_common.dart';
 import 'package:komet/frontend/widgets/attachment/video_edit.dart';
 import 'package:komet/frontend/widgets/attachment/video_editor.dart';
+import 'package:komet/l10n/app_localization_delegates.dart';
 import 'package:komet/l10n/app_localizations.dart';
 
 const List<int> _options = [480, 720, 1080];
@@ -28,7 +29,7 @@ Future<List<int>> _pumpEditor(WidgetTester tester) async {
   await tester.pumpWidget(
     MaterialApp(
       locale: const Locale('ru'),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      localizationsDelegates: appLocalizationDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: VideoQualityEditor(
         frame: _frame(),

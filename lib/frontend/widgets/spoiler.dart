@@ -142,16 +142,12 @@ class _SpoilerBox extends SingleChildRenderObjectWidget {
 
 class _RenderSpoiler extends RenderProxyBox {
   _RenderSpoiler({
-    required Animation<double> reveal,
-    required Offset? origin,
-    required Color color,
-    required double pixelRatio,
-    required bool animate,
-  }) : _reveal = reveal,
-       _origin = origin,
-       _color = color,
-       _pixelRatio = pixelRatio,
-       _animate = animate;
+    required this._reveal,
+    required this._origin,
+    required this._color,
+    required this._pixelRatio,
+    required this._animate,
+  });
 
   static final math.Random _phaseRandom = math.Random();
 

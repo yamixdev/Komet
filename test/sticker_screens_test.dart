@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:komet/backend/api.dart';
 import 'package:komet/backend/modules/stickers.dart';
@@ -9,6 +9,7 @@ import 'package:komet/core/protocol/packet.dart';
 import 'package:komet/frontend/screens/stickers/sticker_collection_screen.dart';
 import 'package:komet/frontend/screens/stickers/sticker_sets_screen.dart';
 import 'package:komet/frontend/screens/stickers/sticker_settings_screen.dart';
+import 'package:komet/l10n/app_localization_delegates.dart';
 import 'package:komet/l10n/app_localizations.dart';
 
 const _pinnedA = 9101;
@@ -116,7 +117,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('ru'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: appLocalizationDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: home,
       ),

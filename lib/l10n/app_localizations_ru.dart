@@ -1,5 +1,8 @@
+// ignore_for_file: deprecated_member_use
+
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -6490,7 +6493,60 @@ class AppLocalizationsRu extends AppLocalizations {
   String get searchViewHint => 'Поиск...';
 
   @override
-  String get searchViewNoResults => 'Поиск ничего не вернул...';
+  String get searchViewNoResults => 'Сообщения не найдены';
+
+  @override
+  String get searchViewFailure => 'Не удалось выполнить поиск';
+
+  @override
+  String get searchViewClear => 'Очистить поиск';
+
+  @override
+  String searchViewPosition(int position, int count) {
+    final intl.NumberFormat positionNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String positionString = positionNumberFormat.format(position);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$positionString из $countString';
+  }
+
+  @override
+  String searchViewCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Загружено $countString результата',
+      many: 'Загружено $countString результатов',
+      few: 'Загружено $countString результата',
+      one: 'Загружен $countString результат',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get searchViewPrevious => 'Предыдущий результат';
+
+  @override
+  String get searchViewNext => 'Следующий результат';
+
+  @override
+  String get searchViewList => 'Список результатов';
+
+  @override
+  String get searchViewInChat => 'В чате';
+
+  @override
+  String get searchViewChooseDate => 'Выбрать дату';
+
+  @override
+  String get searchViewGoToDate => 'Перейти к дате';
 
   @override
   String get adaptiveShellSelectChat => 'Выберите чат';

@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:komet/backend/modules/chats.dart';
 import 'package:komet/backend/modules/messages.dart';
@@ -10,6 +10,7 @@ import 'package:komet/core/storage/chat_activity_store.dart';
 import 'package:komet/core/utils/format.dart';
 import 'package:komet/frontend/widgets/attachment/bubbles/meta_marks.dart';
 import 'package:komet/frontend/widgets/message_bubble.dart';
+import 'package:komet/l10n/app_localization_delegates.dart';
 import 'package:komet/l10n/app_localizations.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
@@ -45,7 +46,7 @@ Future<void> _pumpBubble(WidgetTester tester, CachedMessage message) async {
   await tester.pumpWidget(
     MaterialApp(
       locale: const Locale('ru'),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      localizationsDelegates: appLocalizationDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         body: Align(

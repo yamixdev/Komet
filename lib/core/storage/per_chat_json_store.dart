@@ -15,12 +15,10 @@ abstract class PerChatJsonStore<T> {
   }
 
   PerChatJsonStore({
-    required String prefsKey,
-    required T? Function(Object? raw) fromJson,
-    required Object? Function(T value) toJson,
-  }) : _prefsKey = prefsKey,
-       _fromJson = fromJson,
-       _toJson = toJson {
+    required this._prefsKey,
+    required this._fromJson,
+    required this._toJson,
+  }) {
     _all.add(this as PerChatJsonStore<Object?>);
   }
 

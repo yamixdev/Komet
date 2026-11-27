@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../core/crypto/encrypted_photo_cache.dart';
 import '../../core/crypto/e2ee_service.dart';

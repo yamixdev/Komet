@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -129,8 +129,8 @@ class _ArchiveGateRoute extends PageRoute<void> {
   _ArchiveGateRoute({
     required this.origin,
     required this.destination,
-    _GateBackdrop? backdrop,
-  }) : _backdrop = backdrop;
+    this._backdrop,
+  });
 
   static const Duration revealDuration = Duration(milliseconds: 560);
   static const Duration panelDuration = Duration(milliseconds: 400);

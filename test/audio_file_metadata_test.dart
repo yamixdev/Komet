@@ -20,24 +20,32 @@ class _SyntheticPathProvider extends PathProviderPlatform
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  const cacheName = 'synthetic-audio.mp3';
+  late File source;
+
+  setUp(() async {
+    final directory = await Directory.systemTemp.createTemp(
+      'synthetic_audio_metadata',
+    );
+    final originalPathProvider = PathProviderPlatform.instance;
+    addTearDown(() async {
+      PathProviderPlatform.instance = originalPathProvider;
+      MediaCache.resetForTesting();
+      AudioFileMetadata.resetForTesting();
+      await directory.delete(recursive: true);
+    });
+    PathProviderPlatform.instance = _SyntheticPathProvider(directory.path);
+    source = await File(
+      'test/fixtures/audio_metadata.mp3',
+    ).copy('${directory.path}${Platform.pathSeparator}$cacheName');
+  });
+
   test(
     'reads title, artist, album and embedded cover from an audio file',
     () async {
-      final directory = Directory.systemTemp.createTempSync(
-        'synthetic_audio_metadata',
-      );
-      addTearDown(() {
-        AudioFileMetadata.resetForTesting();
-        MediaCache.resetForTesting();
-        if (directory.existsSync()) directory.deleteSync(recursive: true);
-      });
-      PathProviderPlatform.instance = _SyntheticPathProvider(directory.path);
-      MediaCache.resetForTesting();
-      AudioFileMetadata.resetForTesting();
-
       final metadata = await AudioFileMetadata.read(
-        File('test/fixtures/audio_metadata.mp3'),
-        cacheName: 'synthetic-audio.mp3',
+        source,
+        cacheName: cacheName,
       );
 
       expect(metadata, isNotNull);
@@ -53,17 +61,30 @@ void main() {
       expect(decoded.height, 160);
       expect(AudioFileMetadata.parseCountForTesting, 1);
 
-      await File(
-        'test/fixtures/audio_metadata.mp3',
-      ).setLastModified(DateTime.now().add(const Duration(seconds: 1)));
-      AudioFileMetadata.resetMemoryForTesting();
-      final cached = await AudioFileMetadata.read(
-        File('test/fixtures/audio_metadata.mp3'),
-        cacheName: 'synthetic-audio.mp3',
+      await source.setLastModified(
+        DateTime.now().add(const Duration(seconds: 1)),
       );
+      final cached = await AudioFileMetadata.read(source, cacheName: cacheName);
       expect(cached?.title, 'Synthetic Track');
       expect(cached?.artworkUri, metadata.artworkUri);
       expect(AudioFileMetadata.parseCountForTesting, 1);
     },
   );
+
+  test('regenerates artwork evicted while the audio file is cached', () async {
+    final metadata = await AudioFileMetadata.read(source, cacheName: cacheName);
+    final artwork = File.fromUri(metadata!.artworkUri!);
+    await artwork.delete();
+
+    final results = await Future.wait([
+      AudioFileMetadata.read(source, cacheName: cacheName),
+      AudioFileMetadata.read(source, cacheName: cacheName),
+    ]);
+
+    for (final result in results) {
+      expect(result?.artworkUri, artwork.uri);
+    }
+    expect(await artwork.exists(), isTrue);
+    expect(AudioFileMetadata.parseCountForTesting, 2);
+  });
 }

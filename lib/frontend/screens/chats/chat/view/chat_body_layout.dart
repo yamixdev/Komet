@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:komet/backend/modules/chats.dart' show CachedChat;
 import 'package:komet/core/config/app_chat_chrome.dart';
 import 'package:komet/core/config/app_visual_style.dart';
@@ -45,6 +45,8 @@ class ChatBodyLayout extends StatelessWidget {
   final Animation<double> searchAnim;
   final ChatSearchController search;
   final void Function(MessageSearchResult) onOpenSearchResult;
+  final Future<void> Function(DateTime)? onJumpToSearchDate;
+  final double searchTopInset;
   final String Function(int senderId) searchSenderName;
   final String? Function(int senderId) searchSenderAvatar;
   final bool chromeVignette;
@@ -76,6 +78,8 @@ class ChatBodyLayout extends StatelessWidget {
     required this.searchAnim,
     required this.search,
     required this.onOpenSearchResult,
+    this.onJumpToSearchDate,
+    this.searchTopInset = 0,
     required this.searchSenderName,
     required this.searchSenderAvatar,
     required this.chromeVignette,
@@ -130,8 +134,50 @@ class ChatBodyLayout extends StatelessWidget {
     final composer = ToastObstruction(
       child: MeasureSize(
         onHeight: onComposerMeasured,
-        child: Builder(builder: composerAreaBuilder),
+        child: ValueListenableBuilder<bool>(
+          valueListenable: search.searchMode,
+          builder: (context, searching, _) => AnimatedSwitcher(
+            duration: searchMotion(context, const Duration(milliseconds: 140)),
+            switchInCurve: Curves.easeOut,
+            switchOutCurve: Curves.easeOut,
+            layoutBuilder: (current, previous) => Stack(
+              alignment: Alignment.bottomCenter,
+              children: [
+                for (final outgoing in previous) IgnorePointer(child: outgoing),
+                ?current,
+              ],
+            ),
+            child: searching
+                ? SearchBottomBar(
+                    search: search,
+                    cs: cs,
+                    onOpenResult: onOpenSearchResult,
+                    onJumpToDate: onJumpToSearchDate,
+                  )
+                : Builder(builder: composerAreaBuilder),
+          ),
+        ),
       ),
+    );
+    final panels = ValueListenableBuilder<bool>(
+      valueListenable: search.searchMode,
+      builder: (context, searching, child) =>
+          searching ? const SizedBox.shrink() : child!,
+      child: _panelsColumn(),
+    );
+    final overlay = SearchOverlay(
+      cs: cs,
+      search: search,
+      onOpenResult: onOpenSearchResult,
+      senderName: searchSenderName,
+      senderAvatar: searchSenderAvatar,
+      topInset: searchTopInset,
+    );
+    final floatingOverlay = ValueListenableBuilder<double>(
+      valueListenable: composerHeight,
+      builder: (context, height, child) =>
+          Positioned.fill(bottom: height, child: child!),
+      child: overlay,
     );
 
     if (!underlap) {
@@ -158,20 +204,15 @@ class ChatBodyLayout extends StatelessWidget {
                     left: 0,
                     right: 0,
                     bottom: frosted ? height : 0,
-                    child: _panelsColumn(),
+                    child: panels,
                   ),
                 ),
                 VideoNoteRecordingLayer(controller: note),
-                if (frosted)
+                if (frosted) ...[
+                  floatingOverlay,
                   Positioned(left: 0, right: 0, bottom: 0, child: composer),
-                SearchOverlay(
-                  cs: cs,
-                  searchAnim: searchAnim,
-                  search: search,
-                  onOpenResult: onOpenSearchResult,
-                  senderName: searchSenderName,
-                  senderAvatar: searchSenderAvatar,
-                ),
+                ] else
+                  Positioned.fill(child: overlay),
               ],
             ),
           ),
@@ -189,14 +230,7 @@ class ChatBodyLayout extends StatelessWidget {
           Positioned.fill(child: ChatWallpaperView(wallpaper: wallpaper!)),
         const Positioned.fill(child: SeasonalSnowLayer()),
         Positioned.fill(child: messagesArea),
-        SearchOverlay(
-          cs: cs,
-          searchAnim: searchAnim,
-          search: search,
-          onOpenResult: onOpenSearchResult,
-          senderName: searchSenderName,
-          senderAvatar: searchSenderAvatar,
-        ),
+        floatingOverlay,
         if (vignette) ...[
           if (AppVisualStyle.current.value.glossyChrome)
             Positioned(
@@ -263,12 +297,8 @@ class ChatBodyLayout extends StatelessWidget {
         ),
         ValueListenableBuilder<double>(
           valueListenable: composerHeight,
-          builder: (context, height, _) => Positioned(
-            left: 0,
-            right: 0,
-            bottom: height,
-            child: _panelsColumn(),
-          ),
+          builder: (context, height, _) =>
+              Positioned(left: 0, right: 0, bottom: height, child: panels),
         ),
         VideoNoteRecordingLayer(controller: note),
         Positioned(

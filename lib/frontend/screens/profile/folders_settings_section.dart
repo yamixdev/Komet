@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:ui' show lerpDouble;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../backend/models/chat_folder.dart';

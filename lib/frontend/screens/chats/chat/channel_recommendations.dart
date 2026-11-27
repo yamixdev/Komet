@@ -8,10 +8,9 @@ enum SuggestedChannelState { idle, joining, joined }
 class ChannelRecommendations extends ChangeNotifier {
   ChannelRecommendations({
     required this.chatId,
-    required Future<List<SuggestedChannel>> Function() fetch,
-    required Future<void> Function(SuggestedChannel channel) join,
-  }) : _fetch = fetch,
-       _join = join {
+    required this._fetch,
+    required this._join,
+  }) {
     KometSettings.hideChannelRecommendations.addListener(notifyListeners);
     KometSettings.recommendationsHiddenIn.addListener(notifyListeners);
   }

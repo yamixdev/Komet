@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:komet/core/utils/haptics.dart';
 import 'package:komet/frontend/widgets/swipe_route.dart';

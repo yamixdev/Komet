@@ -509,7 +509,7 @@ class _FileGalleryItem implements GalleryItem {
   final File file;
   Duration? _duration;
 
-  _FileGalleryItem(this.file, {Duration? duration}) : _duration = duration;
+  _FileGalleryItem(this.file);
 
   Future<void> probe() async {
     if (!isVideo || _duration != null) return;

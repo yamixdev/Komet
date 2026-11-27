@@ -1,5 +1,8 @@
+// ignore_for_file: deprecated_member_use
+
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -6441,7 +6444,58 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchViewHint => 'Search...';
 
   @override
-  String get searchViewNoResults => 'Search returned nothing...';
+  String get searchViewNoResults => 'No messages found';
+
+  @override
+  String get searchViewFailure => 'Search failed';
+
+  @override
+  String get searchViewClear => 'Clear search';
+
+  @override
+  String searchViewPosition(int position, int count) {
+    final intl.NumberFormat positionNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String positionString = positionNumberFormat.format(position);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$positionString of $countString';
+  }
+
+  @override
+  String searchViewCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString results loaded',
+      one: '$countString result loaded',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get searchViewPrevious => 'Previous result';
+
+  @override
+  String get searchViewNext => 'Next result';
+
+  @override
+  String get searchViewList => 'Results list';
+
+  @override
+  String get searchViewInChat => 'In chat';
+
+  @override
+  String get searchViewChooseDate => 'Choose a date';
+
+  @override
+  String get searchViewGoToDate => 'Go to date';
 
   @override
   String get adaptiveShellSelectChat => 'Select a chat';

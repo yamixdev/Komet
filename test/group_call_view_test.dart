@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:komet/core/calls/call_session.dart';
@@ -7,6 +7,7 @@ import 'package:komet/frontend/screens/calls/call_participant_tile.dart';
 import 'package:komet/frontend/screens/calls/call_participants_sheet.dart';
 import 'package:komet/frontend/screens/calls/call_stage.dart';
 import 'package:komet/frontend/screens/calls/group_call_view.dart';
+import 'package:komet/l10n/app_localization_delegates.dart';
 import 'package:komet/l10n/app_localizations.dart';
 
 const _selfId = 1001;
@@ -42,7 +43,7 @@ Future<void> _join(
 
 Widget _app(CallSession session, {CallMediaBuilder? mediaOf}) => MaterialApp(
   locale: const Locale('ru'),
-  localizationsDelegates: AppLocalizations.localizationsDelegates,
+  localizationsDelegates: appLocalizationDelegates,
   supportedLocales: AppLocalizations.supportedLocales,
   theme: ThemeData(brightness: Brightness.dark),
   home: Scaffold(

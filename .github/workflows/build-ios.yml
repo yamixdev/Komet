@@ -43,7 +43,7 @@ on:
       - '.github/actions/pin-kolibri-crates/**'
 
 env:
-  FLUTTER_VERSION: '3.47.0'
+  FLUTTER_VERSION: '3.50.0'
 
 jobs:
   build-ios:

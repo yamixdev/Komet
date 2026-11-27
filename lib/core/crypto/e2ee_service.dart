@@ -69,9 +69,9 @@ class E2eeSessionInfo {
 
 class E2eeService {
   E2eeService({
-    Future<List<Map<String, dynamic>>> Function(int accountId) loadSessions =
+    this._loadSessions =
         AppDatabase.loadE2eeSessions,
-  }) : _loadSessions = loadSessions;
+  });
 
   static final E2eeService instance = E2eeService();
 

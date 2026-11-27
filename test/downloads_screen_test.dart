@@ -1,11 +1,12 @@
 import 'dart:io';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:komet/core/media/audio_file_metadata.dart';
 import 'package:komet/core/utils/download_history.dart';
 import 'package:komet/core/utils/media_cache.dart';
 import 'package:komet/frontend/screens/downloads_screen.dart';
+import 'package:komet/l10n/app_localization_delegates.dart';
 import 'package:komet/l10n/app_localizations.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
@@ -73,7 +74,7 @@ void main() {
     await tester.pumpWidget(
       const MaterialApp(
         locale: Locale('ru'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: appLocalizationDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: DownloadsScreen(highlightCacheName: 'synthetic-package.zip'),
       ),
@@ -141,7 +142,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('ru'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: appLocalizationDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: DownloadsScreen(audioMetadataLoader: (_) async => metadata),
       ),

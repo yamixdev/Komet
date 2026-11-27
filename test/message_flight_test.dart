@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'dart:ui' as ui;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -9,6 +9,7 @@ import 'package:komet/backend/modules/messages.dart';
 import 'package:komet/frontend/screens/chats/chat/message_flight.dart';
 import 'package:komet/frontend/screens/chats/chat/view/message_enter.dart';
 import 'package:komet/frontend/widgets/message_bubble.dart';
+import 'package:komet/l10n/app_localization_delegates.dart';
 import 'package:komet/l10n/app_localizations.dart';
 
 const int _me = 1;
@@ -159,7 +160,7 @@ Future<_MiniChatState> _pumpChat(WidgetTester tester, GlobalKey frame) async {
       child: MaterialApp(
         locale: const Locale('ru'),
         theme: ThemeData(fontFamily: 'Inter'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: appLocalizationDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(body: _MiniChat(key: chat)),
       ),

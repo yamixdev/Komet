@@ -1,7 +1,7 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -25,6 +25,8 @@ import 'package:komet/frontend/widgets/paste_media_scope.dart';
 import 'package:komet/frontend/widgets/reply_preview.dart';
 import 'package:komet/frontend/widgets/rich_message_controller.dart';
 import 'package:komet/l10n/app_localizations.dart';
+
+import 'channel_toolbar.dart';
 
 class ComposerInputBar extends StatelessWidget {
   const ComposerInputBar({
@@ -61,6 +63,8 @@ class ComposerInputBar extends StatelessWidget {
     this.onInsertContent,
     required this.isMuted,
     required this.onToggleMute,
+    this.onOpenSearch,
+    this.updatingMute = false,
     this.channelSubscribed = true,
     this.channelSubscribing = false,
     this.canPostToChannel = false,
@@ -106,7 +110,9 @@ class ComposerInputBar extends StatelessWidget {
   final Future<bool> Function()? onPasteMedia;
   final Future<void> Function(KeyboardInsertedContent content)? onInsertContent;
   final bool isMuted;
-  final VoidCallback onToggleMute;
+  final ValueChanged<BuildContext> onToggleMute;
+  final VoidCallback? onOpenSearch;
+  final bool updatingMute;
   final bool channelSubscribed;
   final bool channelSubscribing;
   final bool canPostToChannel;
@@ -135,27 +141,24 @@ class ComposerInputBar extends StatelessWidget {
 
     final isChannel = chatType == "CHANNEL";
     final isGroup = chatType == "CHAT" || chatType == "GROUP";
-    if ((isChannel || isGroup) && !hasForward && !channelSubscribed) {
-      final l10n = AppLocalizations.of(context)!;
-      return ComposerPillBar(
-        label: isChannel
-            ? l10n.chatInfoActionSubscribe
-            : l10n.chatInfoActionJoin,
-        primary: true,
-        busy: channelSubscribing,
-        onTap: onSubscribe,
+    if (isChannel && !hasForward && (!channelSubscribed || !canPostToChannel)) {
+      return ChannelToolbar(
+        subscribed: channelSubscribed,
+        muted: isMuted,
+        busy: channelSubscribed ? updatingMute : channelSubscribing,
+        onSearch: onOpenSearch,
+        onSubscribe: onSubscribe,
+        onToggleMute: onToggleMute,
       );
     }
 
-    // Regular channel members can't post — show the mute toggle instead of
-    // a composer. Groups always keep the real composer once joined.
-    if (isChannel && !hasForward && !canPostToChannel) {
+    if (isGroup && !hasForward && !channelSubscribed) {
       final l10n = AppLocalizations.of(context)!;
       return ComposerPillBar(
-        label: isMuted
-            ? l10n.notificationsFkmEnableLabel
-            : l10n.composerInputMuteNotifications,
-        onTap: onToggleMute,
+        label: l10n.chatInfoActionJoin,
+        primary: true,
+        busy: channelSubscribing,
+        onTap: onSubscribe,
       );
     }
 

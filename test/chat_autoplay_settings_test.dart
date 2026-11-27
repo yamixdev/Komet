@@ -1,5 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:komet/backend/modules/messages.dart';
 import 'package:komet/core/config/komet_settings.dart';
@@ -9,6 +9,7 @@ import 'package:komet/frontend/widgets/lottie_image.dart';
 import 'package:komet/frontend/widgets/message_bubble.dart';
 import 'package:komet/frontend/widgets/message_animoji.dart';
 import 'package:komet/frontend/widgets/section_header.dart';
+import 'package:komet/l10n/app_localization_delegates.dart';
 import 'package:komet/l10n/app_localizations.dart';
 import 'package:komet/models/attachment.dart';
 
@@ -137,7 +138,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('ru'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: appLocalizationDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: Align(

@@ -16,20 +16,14 @@ class OpusOggIndex {
 // #***! разбор держим в памяти, файл голосового маленький
 
   OpusOggIndex._({
-    required Uint8List head,
-    required Uint8List tags,
-    required List<Uint8List> packets,
-    required List<int> packetStarts,
-    required int preSkip,
-    required int serial,
-    required int endGranule,
-  }) : _head = head,
-       _tags = tags,
-       _packets = packets,
-       _packetStarts = packetStarts,
-       _preSkip = preSkip,
-       _serial = serial,
-       _endGranule = endGranule;
+    required this._head,
+    required this._tags,
+    required this._packets,
+    required this._packetStarts,
+    required this._preSkip,
+    required this._serial,
+    required this._endGranule,
+  });
 
   final Uint8List _head;
   final Uint8List _tags;

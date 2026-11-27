@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Small primary-colored section title used across settings/profile screens.
 class SectionHeader extends StatelessWidget {

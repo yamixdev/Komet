@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:komet/backend/modules/chats.dart' show CachedChat;
 import 'package:komet/core/media/media_playback.dart';
 import 'package:komet/frontend/widgets/media_playback_pill.dart';

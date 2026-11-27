@@ -1,10 +1,11 @@
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:komet/backend/modules/messages.dart';
 import 'package:komet/frontend/widgets/formatted_message_text.dart';
 import 'package:komet/frontend/widgets/message_bubble.dart';
 import 'package:komet/frontend/widgets/text_entity_actions.dart';
+import 'package:komet/l10n/app_localization_delegates.dart';
 import 'package:komet/l10n/app_localizations.dart';
 
 const String _sample = '+70001234567 тест 2200123456789019 @ExampleBot';
@@ -27,7 +28,7 @@ Future<void> _pump(WidgetTester tester, Widget child) async {
   await tester.pumpWidget(
     MaterialApp(
       locale: const Locale('ru'),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      localizationsDelegates: appLocalizationDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         body: Align(alignment: Alignment.topLeft, child: child),

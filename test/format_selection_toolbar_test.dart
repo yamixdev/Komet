@@ -1,10 +1,11 @@
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:komet/core/utils/text_format.dart';
 import 'package:komet/frontend/widgets/format_selection_toolbar.dart';
 import 'package:komet/frontend/widgets/rich_message_controller.dart';
 import 'package:komet/frontend/widgets/selection_toolbar.dart';
+import 'package:komet/l10n/app_localization_delegates.dart';
 import 'package:komet/l10n/app_localizations.dart';
 
 const _text = 'первое слово и второе слово';
@@ -33,7 +34,7 @@ class _Composer extends StatelessWidget {
     );
     return MaterialApp(
       locale: const Locale('ru'),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      localizationsDelegates: appLocalizationDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         body: Column(

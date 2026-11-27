@@ -1,12 +1,13 @@
 import 'dart:convert';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:komet/core/config/chat_wallpaper_themes.dart';
 import 'package:komet/core/storage/chat_wallpaper_store.dart';
 import 'package:komet/core/storage/per_chat_json_store.dart';
 import 'package:komet/frontend/widgets/chat_wallpaper_sheet.dart';
 import 'package:komet/frontend/widgets/theme_wallpaper.dart';
+import 'package:komet/l10n/app_localization_delegates.dart';
 import 'package:komet/l10n/app_localizations.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -33,7 +34,7 @@ Future<WallpaperPick?> _pick(
   await tester.pumpWidget(
     MaterialApp(
       locale: const Locale('ru'),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      localizationsDelegates: appLocalizationDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: Builder(
         builder: (context) => TextButton(

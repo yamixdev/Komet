@@ -8,10 +8,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import android.media.AudioAttributes
 import android.media.AudioManager
-import android.media.Ringtone
-import android.media.RingtoneManager
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -227,7 +224,7 @@ object CallRinger {
     private const val FINISHED_LIMIT = 32
 
     private val handler = Handler(Looper.getMainLooper())
-    private var ringtone: Ringtone? = null
+    private var ringtone: IncomingCallRingtone? = null
     private var vibrator: Vibrator? = null
     private var wakeLock: PowerManager.WakeLock? = null
     private var timeout: Runnable? = null
@@ -252,7 +249,7 @@ object CallRinger {
         val audio = ctx.getSystemService(Context.AUDIO_SERVICE) as AudioManager
         val mode = audio.ringerMode
         if (mode == AudioManager.RINGER_MODE_NORMAL) {
-            playRingtone(ctx)
+            ringtone = IncomingCallRingtone(ctx.applicationContext, audio, handler).also { it.start() }
             vibrate(ctx)
         } else if (mode == AudioManager.RINGER_MODE_VIBRATE) {
             vibrate(ctx)
@@ -302,28 +299,6 @@ object CallRinger {
     private fun onTimeout(ctx: Context) {
         stop()
         NotificationManagerCompat.from(ctx).cancel(CallConst.NOTIF_ID)
-    }
-
-    private fun playRingtone(ctx: Context) {
-        try {
-            val uri = RingtoneManager.getActualDefaultRingtoneUri(
-                ctx, RingtoneManager.TYPE_RINGTONE,
-            ) ?: RingtoneManager.getActualDefaultRingtoneUri(
-                ctx, RingtoneManager.TYPE_NOTIFICATION,
-            ) ?: return
-            val rt = RingtoneManager.getRingtone(ctx, uri) ?: return
-            rt.audioAttributes = AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
-                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                .build()
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                rt.isLooping = true
-            }
-            rt.play()
-            ringtone = rt
-        } catch (e: Exception) {
-            Log.w("KometFcm", "ringtone failed: ${e.message}")
-        }
     }
 
     private fun vibrate(ctx: Context) {

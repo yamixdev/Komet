@@ -4,7 +4,7 @@ import 'dart:math' as math;
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
 import 'package:komet/main.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -153,14 +153,11 @@ class _RenderIntrinsicColumn extends RenderBox
         ContainerRenderObjectMixin<RenderBox, _IntrinsicColumnParentData>,
         RenderBoxContainerDefaultsMixin<RenderBox, _IntrinsicColumnParentData> {
   _RenderIntrinsicColumn({
-    required bool stretch,
-    required bool measureLast,
-    required bool fillHeight,
-    required TextDirection textDirection,
-  }) : _stretch = stretch,
-       _measureLast = measureLast,
-       _fillHeight = fillHeight,
-       _textDirection = textDirection;
+    required this._stretch,
+    required this._measureLast,
+    required this._fillHeight,
+    required this._textDirection,
+  });
 
   bool _stretch;
   set stretch(bool value) {

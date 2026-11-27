@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
 
 import 'animated_overlay_popup.dart';
@@ -282,19 +282,13 @@ class _HintBubbleBox extends SingleChildRenderObjectWidget {
 
 class _RenderHintBubble extends RenderShiftedBox {
   _RenderHintBubble({
-    required Rect anchor,
-    required double? pressX,
-    required EdgeInsets insets,
-    required Color fill,
-    required Color outline,
-    required Animation<double> growth,
-  }) : _anchor = anchor,
-       _pressX = pressX,
-       _insets = insets,
-       _fill = fill,
-       _outline = outline,
-       _growth = growth,
-       super(null);
+    required this._anchor,
+    required this._pressX,
+    required this._insets,
+    required this._fill,
+    required this._outline,
+    required this._growth,
+  }) : super(null);
 
   static const double _restingScale = 0.92;
   static const double _tipRounding = 1.5;

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 // #***! точка откуда вылетает системное поделиться, на айпаде без неё падает
 Rect shareOriginOf(BuildContext? context) {

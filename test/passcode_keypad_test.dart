@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:komet/main.dart' show api;
 import 'package:komet/frontend/screens/lock/passcode_pad.dart';
 import 'package:komet/frontend/screens/lock/passcode_setup_screen.dart';
+import 'package:komet/l10n/app_localization_delegates.dart';
 import 'package:komet/l10n/app_localizations.dart';
 
 Future<List<int>> _pumpKeypad(
@@ -114,8 +115,9 @@ void main() {
       MaterialApp(
         navigatorKey: navigator,
         locale: const Locale('ru'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: appLocalizationDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
+        builder: (context, child) => withLegacyMaterial(child!),
         home: const Scaffold(),
       ),
     );

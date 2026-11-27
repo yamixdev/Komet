@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:komet/backend/modules/messages.dart'
     show CachedMessage, FileHistoryEntry;
 import 'package:komet/frontend/commands/commands.dart' show SlashCommand;
@@ -80,7 +80,9 @@ class ComposerArea extends StatelessWidget {
   final Future<bool> Function()? onPasteMedia;
   final Future<void> Function(KeyboardInsertedContent content) onInsertContent;
   final bool isMuted;
-  final VoidCallback onToggleMute;
+  final ValueChanged<BuildContext> onToggleMute;
+  final VoidCallback onOpenSearch;
+  final bool updatingMute;
   final bool channelSubscribed;
   final bool channelSubscribing;
   final bool canPostToChannel;
@@ -147,6 +149,8 @@ class ComposerArea extends StatelessWidget {
     required this.onInsertContent,
     required this.isMuted,
     required this.onToggleMute,
+    required this.onOpenSearch,
+    required this.updatingMute,
     required this.channelSubscribed,
     required this.channelSubscribing,
     this.canPostToChannel = false,
@@ -303,6 +307,8 @@ class ComposerArea extends StatelessWidget {
                     onInsertContent: onInsertContent,
                     isMuted: isMuted,
                     onToggleMute: onToggleMute,
+                    onOpenSearch: onOpenSearch,
+                    updatingMute: updatingMute,
                     channelSubscribed: channelSubscribed,
                     canPostToChannel: canPostToChannel,
                     channelSubscribing: channelSubscribing,

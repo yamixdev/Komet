@@ -1,11 +1,12 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:komet/backend/modules/account/account_models.dart';
 import 'package:komet/backend/modules/messages.dart';
 import 'package:komet/frontend/screens/chats/chat/view/message_row_widgets.dart';
 import 'package:komet/frontend/widgets/lottie_image.dart';
 import 'package:komet/frontend/widgets/message_bubble.dart';
+import 'package:komet/l10n/app_localization_delegates.dart';
 import 'package:komet/l10n/app_localizations.dart';
 import 'package:komet/main.dart' show api;
 import 'package:komet/models/animoji.dart';
@@ -44,7 +45,7 @@ CachedMessage _message() => const CachedMessage(
 
 Widget _app(Widget home) => MaterialApp(
   locale: const Locale('ru'),
-  localizationsDelegates: AppLocalizations.localizationsDelegates,
+  localizationsDelegates: appLocalizationDelegates,
   supportedLocales: AppLocalizations.supportedLocales,
   home: Scaffold(body: home),
 );
