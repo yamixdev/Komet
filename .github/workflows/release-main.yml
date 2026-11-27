@@ -20,18 +20,18 @@ jobs:
       matrix:
         flavor: [komet, oneme]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7.0.1
         with:
           submodules: recursive
 
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6.3.0
         with:
           distribution: 'temurin'
           java-version: '17'
           cache: 'gradle'
       - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@v2.23.0
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: 'stable'
@@ -92,7 +92,7 @@ jobs:
           tar -czf dist/Komet-android-$F-symbols.tar.gz -C build/symbols .
 
       - name: Upload Android artifacts (${{ matrix.flavor }})
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: android-${{ matrix.flavor }}
           path: dist/*
@@ -102,11 +102,11 @@ jobs:
   windows:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7.0.1
         with:
           submodules: recursive
       - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@v2.23.0
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: 'stable'
@@ -124,7 +124,7 @@ jobs:
           New-Item -ItemType Directory -Force -Path dist | Out-Null
           Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath dist/Komet-windows-x64.zip
       - name: Upload Windows artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: windows
           path: dist/*
@@ -134,11 +134,11 @@ jobs:
   linux:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7.0.1
         with:
           submodules: recursive
       - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@v2.23.0
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: 'stable'
@@ -159,7 +159,7 @@ jobs:
           mkdir -p dist
           tar -C build/linux/x64/release/bundle -czf dist/Komet-linux-x64.tar.gz .
       - name: Upload Linux artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: linux
           path: dist/*
@@ -169,11 +169,11 @@ jobs:
   macos:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7.0.1
         with:
           submodules: recursive
       - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@v2.23.0
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: 'stable'
@@ -193,7 +193,7 @@ jobs:
           APP=$(find build/macos/Build/Products/Release -maxdepth 1 -name "*.app" | head -1)
           ditto -c -k --keepParent "$APP" dist/Komet-macos.zip
       - name: Upload macOS artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: macos
           path: dist/*
@@ -203,11 +203,11 @@ jobs:
   ios:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7.0.1
         with:
           submodules: recursive
       - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@v2.23.0
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: 'stable'
@@ -264,7 +264,7 @@ jobs:
           cp -R build/ios/iphoneos/Runner.app build/ios/Payload/
           (cd build/ios && zip -qr ../../dist/Komet-ios-pseudosigned.ipa Payload)
       - name: Upload iOS artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: ios
           path: dist/*
@@ -275,12 +275,12 @@ jobs:
     needs: [android, windows, linux, macos, ios]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7.0.1
         with:
           submodules: recursive
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8.0.2
         with:
           path: dist
           merge-multiple: true
@@ -296,7 +296,7 @@ jobs:
         run: ls -lhR dist
 
       - name: Create release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3.0.4
         with:
           tag_name: ${{ steps.ver.outputs.tag }}
           name: ${{ steps.ver.outputs.name }}

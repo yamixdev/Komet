@@ -1,5 +1,6 @@
 import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.dsl.LibraryExtension
+import com.android.build.api.variant.LibraryAndroidComponentsExtension
 
 allprojects {
     repositories {
@@ -33,8 +34,17 @@ subprojects {
 }
 subprojects {
     pluginManager.withPlugin("com.android.library") {
+        val appAndroid = project(":app").extensions.getByType<ApplicationExtension>()
         extensions.configure<LibraryExtension> {
-            ndkVersion = project(":app").extensions.getByType<ApplicationExtension>().ndkVersion
+            ndkVersion = appAndroid.ndkVersion
+        }
+        extensions.configure<LibraryAndroidComponentsExtension> {
+            finalizeDsl { library ->
+                val appCompileSdk = checkNotNull(appAndroid.compileSdk)
+                if ((library.compileSdk ?: 0) < appCompileSdk) {
+                    library.compileSdk = appCompileSdk
+                }
+            }
         }
     }
 }

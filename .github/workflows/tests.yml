@@ -19,12 +19,12 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7.0.1
         with:
           submodules: recursive
 
       - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@v2.23.0
         with:
           flutter-version: '3.50.0'
           channel: 'stable'
@@ -46,7 +46,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7.0.1
       - name: Check git dependencies in pubspec.lock are reachable
         run: tool/check_git_pins.sh
 
@@ -54,7 +54,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7.0.1
       - uses: dtolnay/rust-toolchain@stable
       - name: Test share authorization and transport
         run: cargo test --locked --manifest-path native/komet_share/Cargo.toml
@@ -63,7 +63,7 @@ jobs:
     runs-on: macos-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7.0.1
       - name: Test share accounts
         run: |
           swiftc ios/Shared/KometShareStore.swift ios/Shared/KometShareAccounts.swift test/native/ios_share_accounts_test.swift -o /tmp/komet-share-accounts-test
