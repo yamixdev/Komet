@@ -442,6 +442,8 @@ class KometAppState extends State<KometApp>
   late Locale _locale;
   late String _fontId;
   bool _isLoggingOut = false;
+  bool _savedLoginRejected = false;
+  VoidCallback? _onStartupLoginSuccess;
   bool _shellReady = false;
   bool _incomingRouteActive = false;
   IncomingCall? _pendingIncoming;
@@ -495,21 +497,27 @@ class KometAppState extends State<KometApp>
     unawaited(_refreshGlobalWallpaper());
 
     api.setReconnectCallback(() async {
+      if (!api.isAuthenticatedHandshake) return;
       try {
         final accountId = await TokenStorage.getActiveAccountId();
         if (accountId != null) {
           final token = await TokenStorage.readToken(accountId);
-          if (token != null) {
+          if (token != null && token.isNotEmpty) {
             await accountModule.login(accountId: accountId, token: token);
+            _savedLoginRejected = false;
           }
         }
       } catch (e) {
+        if (isSavedLoginRejection(e, loginWasRejected: api.loginWasRejected)) {
+          _savedLoginRejected = true;
+        }
         logger.w('reconnect login failed: $e');
       }
     });
 
     _loginStatusSub = accountModule.loginStatusStream.listen((status) async {
       if (status == LoginStatus.success) {
+        _onStartupLoginSuccess?.call();
         DeepLinkService.instance.markReady();
         NotificationBridge.instance.markReady();
         unawaited(NotificationBridge.instance.dismissReadChats());
@@ -548,26 +556,37 @@ class KometAppState extends State<KometApp>
       if (_isLoggingOut) return;
       _isLoggingOut = true;
 
-      await PushService.instance.unregister();
-
-      final accountId = await TokenStorage.getActiveAccountId();
-      if (accountId != null) {
-        await accountModule.removeAccount(accountId);
+      try {
+        await PushService.instance.unregister();
+      } catch (error, stack) {
+        logger.w('Unable to unregister notifications: $error\n$stack');
       }
 
-      final navState = KometApp.navigatorKey.currentState;
-      if (navState != null) {
+      try {
+        await api.disconnect();
+        final accountId = await TokenStorage.getActiveAccountId();
+        if (accountId != null) {
+          await TokenStorage.clearActiveAccount();
+          await accountModule.removeAccount(accountId);
+        }
+      } catch (error, stack) {
+        logger.w('Unable to clear expired session: $error\n$stack');
+      }
+
+      try {
+        final navState = KometApp.navigatorKey.currentState;
+        if (navState == null) return;
         final overlay = navState.overlay;
         if (overlay != null) {
           showCustomNotificationOnOverlay(overlay, e.message);
         }
-
         await navState.pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const LoginScreen()),
           (route) => false,
         );
+      } finally {
+        _isLoggingOut = false;
       }
-      _isLoggingOut = false;
     });
 
     _vpnBypassSub = VpnBypassService.instance.events.listen((r) {
@@ -1272,53 +1291,119 @@ class _StartupScreen extends StatefulWidget {
 }
 
 class _StartupScreenState extends State<_StartupScreen> {
+  StreamSubscription<SessionState>? _connectionSub;
+  KometAppState? _app;
+  SessionState _connectionState = SessionState.disconnected;
+  bool _hasCachedProfile = false;
+  bool _connectionAttemptFinished = false;
+  bool _restoring = false;
+  bool _startupCheckFailed = false;
+  bool _navigating = false;
+
+  bool get _canNavigate =>
+      mounted && !_navigating && ModalRoute.of(context)?.isCurrent == true;
+
+  bool get _connectionPending =>
+      _connectionState == SessionState.connecting ||
+      _connectionState == SessionState.connected;
+
+  bool get _canRetry =>
+      _connectionAttemptFinished &&
+      !_restoring &&
+      !_connectionPending &&
+      !(_app?._isLoggingOut ?? false);
+
   @override
   void initState() {
     super.initState();
     _tryAutoLogin();
   }
 
+  @override
+  void dispose() {
+    _connectionSub?.cancel();
+    _app?._onStartupLoginSuccess = null;
+    super.dispose();
+  }
+
   Future<void> _tryAutoLogin() async {
     if (LaunchFlags.debugTest) {
       await Future<void>.delayed(Duration.zero);
-      if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const AdaptiveShell()),
-      );
-      KometApp.stateOf(context)?.markShellReady();
+      _goToShell();
       return;
     }
 
-    int? accountId = await TokenStorage.getActiveAccountId();
-
-    if (accountId == null ||
-        await TokenStorage.tryReadToken(accountId) == null) {
-      accountId = await _recoverActiveAccount();
-    }
-
-    // #***! есть аккаунт с токеном — сокет боевой версии под автологин,
-    // иначе pre-login (прошлая версия) до входа по телефону
-    unawaited(api.connect(authenticated: accountId != null));
-
-    if (!mounted) return;
-
-    if (accountId == null) {
-      _goToLogin();
-      return;
-    }
-
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const AdaptiveShell()),
-    );
-    KometApp.stateOf(context)?.markShellReady();
+    await _restoreSession();
   }
 
-  Future<int?> _recoverActiveAccount() async {
+  Future<void> _restoreSession() async {
+    if (_restoring || _connectionPending) return;
+    setState(() {
+      _restoring = true;
+      _startupCheckFailed = false;
+      _hasCachedProfile = false;
+    });
+
+    try {
+      final activeId = await TokenStorage.getActiveAccountId();
+      final token = activeId == null ? null : await TokenStorage.readToken(activeId);
+      final accountId = token == null || token.isEmpty
+          ? await _recoverActiveAccount(activeId)
+          : activeId;
+      if (!_canNavigate) return;
+
+      if (accountId == null) {
+        if (api.state != SessionState.disconnected) await api.disconnect();
+        if (activeId != null) await TokenStorage.clearActiveAccount();
+        _goToLogin();
+        return;
+      }
+
+      _hasCachedProfile = await AppDatabase.loadProfile(accountId) != null;
+      if (!mounted || !_canNavigate) return;
+      if (_connectionSub == null) {
+        _app = KometApp.stateOf(context);
+        _app?._onStartupLoginSuccess = _goToShell;
+        _connectionState = api.state;
+        _connectionSub = api.stateStream.listen(_onConnectionState);
+      }
+
+      if (accountModule.isLoggedIn) {
+        _goToShell();
+        return;
+      }
+      if (_connectionPending) return;
+      if (_connectionState == SessionState.online) await api.disconnect();
+      if (_canNavigate) await api.connect(authenticated: true);
+      if (accountModule.isLoggedIn) _goToShell();
+    } catch (error, stack) {
+      logger.w('Unable to restore saved session: $error\n$stack');
+      _startupCheckFailed = true;
+    } finally {
+      if (mounted && !_navigating) {
+        setState(() {
+          _restoring = false;
+          _connectionAttemptFinished = true;
+        });
+      }
+    }
+  }
+
+  void _onConnectionState(SessionState state) {
+    if (!mounted || _navigating) return;
+    if (state == SessionState.online && accountModule.isLoggedIn && _canNavigate) {
+      _goToShell();
+    } else {
+      setState(() => _connectionState = state);
+    }
+  }
+
+  Future<int?> _recoverActiveAccount(int? checkedAccountId) async {
     final profiles = await AppDatabase.loadAllProfiles();
     for (final profile in profiles) {
-      if (await TokenStorage.tryReadToken(profile.id) != null) {
+      if (profile.id == checkedAccountId) continue;
+      final token = await TokenStorage.readToken(profile.id);
+      if (token != null && token.isNotEmpty) {
         await TokenStorage.setActiveAccount(profile.id);
         await AppDatabase.setActiveAccount(profile.id);
         await ContactsModule.primeCacheFromDb(profile.id);
@@ -1330,21 +1415,107 @@ class _StartupScreenState extends State<_StartupScreen> {
   }
 
   void _goToLogin() {
-    if (mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
-      );
-      KometApp.stateOf(context)?.markShellReady(signedIn: false);
+    if (!_canNavigate) return;
+    _navigating = true;
+    unawaited(api.connect(authenticated: false, web: false));
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+    );
+    KometApp.stateOf(context)?.markShellReady(signedIn: false);
+  }
+
+  Future<void> _signInByPhone() async {
+    if (!_canNavigate || !_canRetry) return;
+    setState(() => _restoring = true);
+    try {
+      await api.disconnect();
+      await TokenStorage.clearActiveAccount();
+      _goToLogin();
+    } catch (error, stack) {
+      logger.w('Unable to start phone sign-in: $error\n$stack');
+      if (mounted && !_navigating) {
+        setState(() {
+          _restoring = false;
+          _startupCheckFailed = true;
+        });
+      }
     }
+  }
+
+  void _goToShell() {
+    if (!_canNavigate) return;
+    final app = KometApp.stateOf(context);
+    if (app?._isLoggingOut ?? false) return;
+    _navigating = true;
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const AdaptiveShell()),
+    );
+    app?.markShellReady();
+  }
+
+  void _openCachedChats() {
+    if (!_canRetry ||
+        !_hasCachedProfile ||
+        api.state != SessionState.disconnected) {
+      return;
+    }
+    if (_app?._savedLoginRejected ?? false) return;
+    _goToShell();
   }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+    final disconnected = _connectionState == SessionState.disconnected;
+    final rejected = KometApp.stateOf(context)?._savedLoginRejected ?? false;
+    final busy = !_connectionAttemptFinished || _restoring || _connectionPending;
     return Scaffold(
       backgroundColor: cs.surface,
-      body: Center(child: SmallSpinner(size: 36, color: cs.primary)),
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (busy) ...[
+                  SmallSpinner(size: 36, color: cs.primary),
+                  const SizedBox(height: 16),
+                ],
+                Text(
+                  busy
+                      ? l10n.connectionStatusConnecting
+                      : rejected || _startupCheckFailed || !disconnected
+                      ? l10n.startupRestoreFailed
+                      : l10n.connectionStatusWaitingForNetwork,
+                  textAlign: TextAlign.center,
+                ),
+                if (_connectionAttemptFinished) ...[
+                  const SizedBox(height: 12),
+                  TextButton(
+                    onPressed: _canRetry ? _restoreSession : null,
+                    child: Text(l10n.videoViewerRetry),
+                  ),
+                  TextButton(
+                    onPressed: _canRetry ? _signInByPhone : null,
+                    child: Text(l10n.startupSignInByPhone),
+                  ),
+                  if (_hasCachedProfile && !rejected)
+                    TextButton(
+                      onPressed: _canRetry && disconnected
+                          ? _openCachedChats
+                          : null,
+                      child: Text(l10n.startupOpenCachedChats),
+                    ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

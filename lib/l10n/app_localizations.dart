@@ -159,6 +159,36 @@ abstract class AppLocalizations {
   /// **'Terms of use'**
   String get loginTermsOfUse;
 
+  /// No description provided for @loginReadTermsToEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Scroll to the end to continue'**
+  String get loginReadTermsToEnd;
+
+  /// No description provided for @loginAcceptAndContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept and continue'**
+  String get loginAcceptAndContinue;
+
+  /// No description provided for @startupOpenCachedChats.
+  ///
+  /// In en, this message translates to:
+  /// **'Open chats offline'**
+  String get startupOpenCachedChats;
+
+  /// No description provided for @startupRestoreFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t restore your session'**
+  String get startupRestoreFailed;
+
+  /// No description provided for @startupSignInByPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with a phone number'**
+  String get startupSignInByPhone;
+
   /// No description provided for @loginConfirmPhoneTitle.
   ///
   /// In en, this message translates to:

@@ -44,13 +44,14 @@ class ChannelToolbar extends StatelessWidget {
 
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         child: Row(
           children: [
             if (onSearch != null) ...[
               Tooltip(
                 message: searchLabel,
                 child: GlossyPill(
+                  softGlass: true,
                   onTap: onSearch,
                   color: colors.surfaceContainerHigh,
                   depth: 4,
@@ -79,6 +80,7 @@ class ChannelToolbar extends StatelessWidget {
                       ? () => onToggleMute(anchor)
                       : onSubscribe,
                   child: GlossyPill(
+                    softGlass: true,
                     onTap: busy
                         ? null
                         : subscribed

@@ -97,6 +97,7 @@ class GlossyPill extends StatelessWidget {
   final bool liquid;
   final BackdropKey? backdropKey;
   final bool keepInkLayer;
+  final bool softGlass;
 
   const GlossyPill({
     super.key,
@@ -113,6 +114,7 @@ class GlossyPill extends StatelessWidget {
     this.liquid = false,
     this.backdropKey,
     this.keepInkLayer = false,
+    this.softGlass = false,
   }) : borderRadius =
            borderRadius ?? const BorderRadius.all(Radius.circular(100));
 
@@ -128,11 +130,52 @@ class GlossyPill extends StatelessWidget {
       builder: (context, style, _) {
         if (style == VisualStyle.materialYou) return _flat(context);
         if (liquid && LiquidGlass.isSupported) return _liquid(context);
+        if (softGlass && blurSigma == null) return _softGlass(context);
         return ValueListenableBuilder<bool>(
           valueListenable: AppPillGradient.current,
           builder: (context, gradient, _) => _glossy(context, gradient),
         );
       },
+    );
+  }
+
+  Widget _softGlass(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final base = color ?? cs.surfaceContainerHigh;
+    final dark = GlossyDecor.isDark(base);
+    final rim = cs.onSurface.withValues(alpha: dark ? 0.16 : 0.12);
+    final decoration = BoxDecoration(
+      borderRadius: borderRadius,
+      border: Border.fromBorderSide(
+        borderSide ?? BorderSide(color: rim, width: 0.8),
+      ),
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          Color.alphaBlend(
+            Colors.white.withValues(alpha: dark ? 0.09 : 0.25),
+            base,
+          ).withValues(alpha: base.a * 0.96),
+          base.withValues(alpha: base.a * 0.91),
+          base,
+        ],
+      ),
+    );
+    final content = Padding(padding: padding, child: child);
+    return DecoratedBox(
+      decoration: decoration,
+      child: _inert
+          ? content
+          : Material(
+              type: MaterialType.transparency,
+              child: InkWell(
+                borderRadius: borderRadius,
+                onTap: onTap,
+                onLongPress: onLongPress,
+                child: content,
+              ),
+            ),
     );
   }
 

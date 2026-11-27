@@ -16,6 +16,7 @@ import 'package:komet/core/crypto/message_decryption_cache.dart';
 import 'package:komet/core/utils/haptics.dart';
 import 'package:komet/core/utils/text_format.dart';
 import 'package:komet/frontend/widgets/animated_text_swap.dart';
+import 'package:komet/frontend/widgets/glossy_pill.dart';
 import 'package:komet/frontend/widgets/liquid_glass.dart';
 import 'package:komet/frontend/widgets/message_actions_overlay.dart'
     show
@@ -74,13 +75,20 @@ class PinnedMessageBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final content = Material(
-      color: frosted ? AppFrost.glassTint(cs) : cs.surfaceContainerHigh,
+      color: frosted
+          ? AppFrost.glassTint(cs)
+          : floating
+          ? Colors.transparent
+          : cs.surfaceContainerHigh,
       borderRadius: floating ? _radius : null,
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: EdgeInsets.symmetric(
+            horizontal: 10,
+            vertical: floating ? 3 : 8,
+          ),
           child: Row(
             children: [
               Container(
@@ -148,7 +156,12 @@ class PinnedMessageBanner extends StatelessWidget {
         child: content,
       );
     }
-    return content;
+    return GlossyPill(
+      softGlass: true,
+      borderRadius: _radius,
+      color: cs.surfaceContainerHigh,
+      child: content,
+    );
   }
 }
 

@@ -176,13 +176,10 @@ void main() {
     expect(await pumpBar(tester, ComposerStyle.materialYou), kToolbarHeight);
   });
 
-  testWidgets('the glossy composer keeps its taller pill layout', (
+  testWidgets('the glossy composer fits its controls in a compact row', (
     tester,
   ) async {
-    expect(
-      await pumpBar(tester, ComposerStyle.glossy),
-      greaterThan(kToolbarHeight),
-    );
+    expect(await pumpBar(tester, ComposerStyle.glossy), kToolbarHeight);
   });
 
   testWidgets('material actions sit on the app bar icon columns', (
@@ -203,12 +200,33 @@ void main() {
     expect(width - tester.getCenter(_actionButton).dx, menu);
   });
 
-  testWidgets('glossy action geometry is untouched', (tester) async {
+  testWidgets('the glossy composer keeps its actions aligned', (tester) async {
     await pumpBar(tester, ComposerStyle.glossy);
     final width = tester.getSize(find.byType(ComposerInputBar)).width;
 
-    expect(tester.getCenter(_actionButton).dx, width - 39);
-    expect(tester.getCenter(find.byIcon(Symbols.face)).dx, 38);
-    expect(tester.getCenter(find.byIcon(Symbols.attachment)).dx, width - 100);
+    expect(tester.getCenter(_actionButton).dx, width - 32);
+    expect(tester.getCenter(find.byIcon(Symbols.face)).dx, 28);
+    expect(tester.getCenter(find.byIcon(Symbols.attachment)).dx, width - 76);
+  });
+
+  testWidgets('tapping toggles video mode without preparing the camera', (
+    tester,
+  ) async {
+    await pumpBar(tester, ComposerStyle.glossy);
+    await tester.tap(_actionButton);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+
+    expect(note.videoNoteMode.value, isTrue);
+    expect(note.camReady.value, isFalse);
+    expect(find.byIcon(Symbols.videocam), findsOneWidget);
+
+    await tester.tap(_actionButton);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+
+    expect(note.videoNoteMode.value, isFalse);
+    expect(note.camReady.value, isFalse);
+    expect(find.byIcon(Symbols.mic), findsOneWidget);
   });
 }

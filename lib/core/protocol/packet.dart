@@ -121,3 +121,9 @@ bool isAuthSessionLostError(Object error) {
   return text.contains('сессия не найдена') ||
       text.contains('авторизационная сессия');
 }
+
+bool isSavedLoginRejection(Object error, {required bool loginWasRejected}) =>
+    isAuthSessionLostError(error) ||
+    (loginWasRejected &&
+        error is PacketError &&
+        !(error.errorKey?.contains('not.ready') ?? false));

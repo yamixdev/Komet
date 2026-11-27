@@ -45,6 +45,22 @@ class AppLocalizationsRu extends AppLocalizations {
   String get loginTermsOfUse => 'Условия использования';
 
   @override
+  String get loginReadTermsToEnd =>
+      'Прокрутите условия до конца, чтобы продолжить';
+
+  @override
+  String get loginAcceptAndContinue => 'Принять и продолжить';
+
+  @override
+  String get startupOpenCachedChats => 'Открыть чаты без сети';
+
+  @override
+  String get startupRestoreFailed => 'Не удалось восстановить сессию';
+
+  @override
+  String get startupSignInByPhone => 'Войти по номеру телефона';
+
+  @override
   String get loginConfirmPhoneTitle => 'Это правильный номер?';
 
   @override

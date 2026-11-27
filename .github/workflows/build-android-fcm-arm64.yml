@@ -1,0 +1,148 @@
+name: Build Android ARM64 (FCM) Draft
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_name:
+        description: Version name (empty uses pubspec.yaml)
+        type: string
+      version_code:
+        description: Android version code (empty uses pubspec.yaml)
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      version_name: ${{ steps.version.outputs.name }}
+      version_code: ${{ steps.version.outputs.code }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          submodules: recursive
+
+      - name: Validate version
+        id: version
+        env:
+          INPUT_NAME: ${{ inputs.version_name }}
+          INPUT_CODE: ${{ inputs.version_code }}
+        run: |
+          default_version=$(awk '$1 == "version:" { print $2; exit }' pubspec.yaml)
+          name=${INPUT_NAME:-${default_version%+*}}
+          code=${INPUT_CODE:-${default_version##*+}}
+          if [[ ! "$name" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Version name must use major.minor.patch"
+            exit 1
+          fi
+          if [[ ! "$code" =~ ^[1-9][0-9]{0,9}$ ]] || (( code > 2147483647 )); then
+            echo "::error::Version code must be a positive Android integer"
+            exit 1
+          fi
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-java@v6.3.0
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - uses: subosito/flutter-action@v2.23.0
+        with:
+          flutter-version: '3.50.0'
+          channel: stable
+          cache: true
+
+      - uses: ./.github/actions/setup-rust
+        with:
+          targets: aarch64-linux-android
+
+      - run: flutter pub get --enforce-lockfile
+
+      - name: Configure Gradle
+        run: |
+          mkdir -p ~/.gradle
+          cat >> ~/.gradle/gradle.properties <<'EOF'
+          org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m
+          kotlin.daemon.jvmargs=-Xmx1536m
+          org.gradle.caching=true
+          org.gradle.parallel=true
+          org.gradle.configureondemand=true
+          EOF
+
+      - name: Configure signing
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        run: |
+          if [[ -z "$KEYSTORE_BASE64" ]]; then
+            echo "::notice::Using the project's debug signing fallback"
+            exit 0
+          fi
+          printf '%s' "$KEYSTORE_BASE64" | base64 -d > android/app/komet-release.jks
+          printf 'storePassword=%s\nkeyPassword=%s\nkeyAlias=%s\nstoreFile=komet-release.jks\n' \
+            "$KEYSTORE_PASSWORD" "$KEY_PASSWORD" "$KEY_ALIAS" > android/key.properties
+
+      - name: Build and verify Oneme ARM64 APK
+        env:
+          VERSION_NAME: ${{ steps.version.outputs.name }}
+          VERSION_CODE: ${{ steps.version.outputs.code }}
+        run: |
+          flutter build apk --release --flavor oneme --target-platform android-arm64 \
+            --split-per-abi --obfuscate --split-debug-info=build/symbols \
+            --build-name "$VERSION_NAME" --build-number "$VERSION_CODE"
+          apk=build/app/outputs/flutter-apk/app-arm64-v8a-oneme-release.apk
+          aapt2=$(find "$ANDROID_HOME/build-tools" -name aapt2 | sort -V | tail -n 1)
+          test -x "$aapt2"
+          metadata=$("$aapt2" dump badging "$apk")
+          grep -F "package: name='ru.oneme.app' versionCode='$VERSION_CODE' versionName='$VERSION_NAME'" <<< "$metadata"
+          python3 - "$apk" <<'PY'
+          from sys import argv
+          from zipfile import ZipFile
+
+          with ZipFile(argv[1]) as apk:
+              libraries = {
+                  path.split('/')[1]
+                  for path in apk.namelist()
+                  if path.startswith('lib/') and path.endswith('.so')
+              }
+              if libraries != {'arm64-v8a'}:
+                  raise SystemExit(f'Unexpected APK ABIs: {sorted(libraries)}')
+          PY
+          mkdir -p dist
+          cp "$apk" "dist/Komet-FCM-arm64-v8a-$VERSION_NAME-$VERSION_CODE.apk"
+
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: komet-fcm-arm64
+          path: dist/*.apk
+          if-no-files-found: error
+
+  draft:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8.0.2
+        with:
+          name: komet-fcm-arm64
+          path: dist
+
+      - uses: softprops/action-gh-release@v3.0.4
+        with:
+          draft: true
+          tag_name: fcm-arm64-v${{ needs.build.outputs.version_name }}-${{ needs.build.outputs.version_code }}-${{ github.run_id }}-${{ github.run_attempt }}
+          name: Komet FCM ${{ needs.build.outputs.version_name }} (${{ needs.build.outputs.version_code }}) ARM64
+          target_commitish: ${{ github.sha }}
+          files: dist/*.apk
+          fail_on_unmatched_files: true
+          body: |
+            Android ARM64, версия Oneme с FCM.
+
+            [Сборка](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})

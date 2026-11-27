@@ -601,8 +601,7 @@ class _ChatScreenState extends State<ChatScreen>
 
   static const double _avgMessageHeight = 72.0;
   static const double _historyPrefetchExtent = _avgMessageHeight * 8;
-  static const double _glossyHeaderHeight = 76.0;
-  static const double _pinnedBannerLift = 6.0;
+  static const double _pinnedBannerLift = 2.0;
   static const double _unreadSeparatorHeight = 30.0;
   static const double _unreadSeparatorInset = 72.0;
   static const double _unreadAnchorFallbackAlignment = 0.3;
@@ -1313,7 +1312,7 @@ class _ChatScreenState extends State<ChatScreen>
     final chromeBottom = _effectiveChrome == ChatChromeStyle.color
         ? 0.0
         : MediaQuery.paddingOf(context).top +
-              (glossy ? _glossyHeaderHeight : kToolbarHeight) +
+              (glossy ? ChatAppBar.glossyHeaderHeight : kToolbarHeight) +
               _pinnedBannerHeight.value;
     final desiredTop = chromeBottom + separator + _unreadSeparatorInset;
     return (desiredTop / listBox.size.height).clamp(0.0, 0.5);
@@ -5327,14 +5326,14 @@ class _ChatScreenState extends State<ChatScreen>
   double _pinnedBannerTop() {
     final glossy = AppVisualStyle.current.value.glossyChrome;
     return MediaQuery.paddingOf(context).top +
-        (glossy ? _glossyHeaderHeight : kToolbarHeight) -
+        (glossy ? ChatAppBar.glossyHeaderHeight : kToolbarHeight) -
         _pinnedBannerLift;
   }
 
   double _defaultEdgeVignetteHeight() {
     final glossy = AppVisualStyle.current.value.glossyChrome;
     return MediaQuery.paddingOf(context).top +
-        (glossy ? _glossyHeaderHeight : kToolbarHeight);
+        (glossy ? ChatAppBar.glossyHeaderHeight : kToolbarHeight);
   }
 
   Widget _buildMessagesArea() {

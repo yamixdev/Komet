@@ -2588,13 +2588,14 @@ class _ChatListScreenState extends State<ChatListScreen>
                               ),
                             ),
                           Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 3, 20, 8),
+                            padding: const EdgeInsets.fromLTRB(12, 2, 12, 5),
                             child: GestureDetector(
                               behavior: HitTestBehavior.opaque,
                               onTap: (widget.forwardMode || _shareMode)
                                   ? null
                                   : _openSearch,
                               child: GlossyPill(
+                                softGlass: true,
                                 color: cs.surfaceContainerHighest,
                                 borderRadius: BorderRadius.circular(50),
                                 padding: const EdgeInsets.symmetric(
@@ -2602,7 +2603,7 @@ class _ChatListScreenState extends State<ChatListScreen>
                                 ),
                                 depth: 6,
                                 child: SizedBox(
-                                  height: 44,
+                                  height: 42,
                                   child: Row(
                                     children: [
                                       Icon(
@@ -3756,8 +3757,8 @@ class _ChatListScreenState extends State<ChatListScreen>
     return (total: total, loud: loud);
   }
 
-  static const double _folderStripInset = 20;
-  static const double _folderChipGap = 8;
+  static const double _folderStripInset = 12;
+  static const double _folderChipGap = 6;
   static const double _folderChipPadding = 12;
   static const double _folderBadgeGap = 6;
   static const TextStyle _folderChipTextStyle = TextStyle(
@@ -3870,6 +3871,7 @@ class _ChatListScreenState extends State<ChatListScreen>
         showFolderActionSheet(context, folder: folder);
       },
       child: GlossyPill(
+        softGlass: true,
         color: isSelected ? cs.primaryContainer : cs.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(50),
         padding: const EdgeInsets.symmetric(

@@ -45,6 +45,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginTermsOfUse => 'Terms of use';
 
   @override
+  String get loginReadTermsToEnd => 'Scroll to the end to continue';
+
+  @override
+  String get loginAcceptAndContinue => 'Accept and continue';
+
+  @override
+  String get startupOpenCachedChats => 'Open chats offline';
+
+  @override
+  String get startupRestoreFailed => 'Couldn\'t restore your session';
+
+  @override
+  String get startupSignInByPhone => 'Sign in with a phone number';
+
+  @override
   String get loginConfirmPhoneTitle => 'Is this the correct number?';
 
   @override

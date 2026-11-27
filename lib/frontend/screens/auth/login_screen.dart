@@ -1,13 +1,15 @@
 import 'dart:async';
+
 import 'package:flutter/gestures.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:komet/core/config/countries.dart';
 import 'package:komet/l10n/app_localizations.dart';
-import 'package:komet/l10n/terms_of_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import 'code_confirmation_screen.dart';
+import 'login_terms_sheet.dart';
 import 'token_login_screen.dart';
 import 'select_country_screen.dart';
 import 'call_out_confirmation_screen.dart';
@@ -45,6 +47,10 @@ class _LoginScreenState extends State<LoginScreen> {
   late CountryName _selectedCountry;
   bool _isPhoneValid = false;
   bool _isTOSRead = false;
+  bool _submittingPhone = false;
+  late final Future<void> _termsLoaded;
+  late final TapGestureRecognizer _termsLink = TapGestureRecognizer()
+    ..onTap = () => _showTOS();
   // #***! экспериментально: представляемся веб-клиентом, чтобы код пришёл по SMS
   late bool _alwaysSendSms = api.webHandshake;
   bool _switchingSmsMode = false;
@@ -74,7 +80,7 @@ class _LoginScreenState extends State<LoginScreen> {
     });
     _selectedCountry = countriesByCode['RU'] ?? allCountries.first;
     _clampCountryToAllowed();
-    _checkTOS();
+    _termsLoaded = _checkTOS();
   }
 
   // #***! режим зашит в рукопожатие, так что переподнимаем сессию целиком
@@ -254,6 +260,7 @@ class _LoginScreenState extends State<LoginScreen> {
     _phoneErrorTimer?.cancel();
     _logoTapTimer?.cancel();
     _phoneController.dispose();
+    _termsLink.dispose();
     super.dispose();
   }
 
@@ -362,9 +369,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   onTap: () {
                     Navigator.pop(sheetContext);
-                    KometApp.stateOf(
-                      appContext,
-                    )?.applyLocale(const Locale('ru'));
+                    KometApp.stateOf(appContext)
+                        ?.applyLocale(const Locale('ru'));
                   },
                 ),
                 ListTile(
@@ -378,9 +384,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   onTap: () {
                     Navigator.pop(sheetContext);
-                    KometApp.stateOf(
-                      appContext,
-                    )?.applyLocale(const Locale('en'));
+                    KometApp.stateOf(appContext)
+                        ?.applyLocale(const Locale('en'));
                   },
                 ),
               ],
@@ -391,165 +396,23 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  void _showTOS(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final termsLocale = Localizations.localeOf(context);
-    showModalBottomSheet(
+  Future<bool> _showTOS({String? phoneNumber}) async {
+    await _termsLoaded;
+    if (!mounted) return false;
+    FocusManager.instance.primaryFocus?.unfocus();
+    final accepted = await showModalBottomSheet<bool>(
       context: context,
-      backgroundColor: cs.surfaceContainerHigh,
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,
       isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
       shape: kSheetShape,
-      builder: (context) {
-        double progress = _isTOSRead ? 1.0 : 0.0;
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            final cs = Theme.of(context).colorScheme;
-            void trackReading(ScrollMetrics metrics) {
-              if (_isTOSRead) return;
-              final newProgress = metrics.maxScrollExtent > 0
-                  ? (metrics.pixels / metrics.maxScrollExtent).clamp(0.0, 1.0)
-                  : 1.0;
-              if (newProgress >= 0.99) {
-                _markTOSRead();
-                setModalState(() => progress = 1.0);
-              } else {
-                setModalState(() => progress = newProgress);
-              }
-            }
-
-            return DraggableScrollableSheet(
-              initialChildSize: 0.7,
-              minChildSize: 0.5,
-              maxChildSize: 1.0,
-              snap: true,
-              snapSizes: const [0.7, 1.0],
-              expand: false,
-              builder: (context, scrollController) => Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          AppLocalizations.of(context)!.loginTermsOfUse,
-                          style: TextStyle(
-                            color: cs.onSurface,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: () => Navigator.pop(context),
-                          icon: Icon(Symbols.close, color: cs.onSurfaceVariant),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Expanded(
-                      child: NotificationListener<ScrollMetricsNotification>(
-                        onNotification: (notification) {
-                          trackReading(notification.metrics);
-                          return false;
-                        },
-                        child: NotificationListener<ScrollUpdateNotification>(
-                          onNotification: (notification) {
-                            trackReading(notification.metrics);
-                            return false;
-                          },
-                          child: ListView(
-                            controller: scrollController,
-                            children: [
-                              Text(
-                                termsOfServiceBody(termsLocale),
-                                style: TextStyle(
-                                  color: cs.onSurfaceVariant,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w400,
-                                  height: 1.5,
-                                ),
-                              ),
-                              const SizedBox(height: 32),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Stack(
-                      alignment: Alignment.centerRight,
-                      children: [
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          height: 48,
-                          alignment: Alignment.centerLeft,
-                          padding: EdgeInsets.only(
-                            right: progress == 1.0 ? 56.0 : 0.0,
-                          ),
-                          child: Container(
-                            height: 4,
-                            width: double.infinity,
-                            decoration: BoxDecoration(
-                              color: cs.surfaceContainerHighest,
-                              borderRadius: BorderRadius.circular(2),
-                            ),
-                            alignment: Alignment.centerLeft,
-                            child: FractionallySizedBox(
-                              widthFactor: progress < 1.0 ? progress : 1.0,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: cs.primary,
-                                  borderRadius: BorderRadius.circular(2),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        AnimatedOpacity(
-                          duration: const Duration(milliseconds: 300),
-                          opacity: progress == 1.0 ? 1.0 : 0.0,
-                          curve: Curves.easeIn,
-                          child: IgnorePointer(
-                            ignoring: progress < 1.0,
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 300),
-                              transform: Matrix4.translationValues(
-                                progress == 1.0 ? 0 : 20,
-                                0,
-                                0,
-                              ),
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: cs.primaryContainer,
-                                shape: BoxShape.circle,
-                              ),
-                              clipBehavior: Clip.antiAlias,
-                              child: Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  onTap: () => Navigator.pop(context),
-                                  child: Icon(
-                                    Symbols.check,
-                                    color: cs.onPrimaryContainer,
-                                    size: 24,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
+      builder: (_) =>
+          LoginTermsSheet(accepted: _isTOSRead, phoneNumber: phoneNumber),
     );
+    if (!mounted || accepted != true) return false;
+    if (!_isTOSRead) await _markTOSRead();
+    return mounted;
   }
 
   void _showPhoneError(String message) {
@@ -560,12 +423,11 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  void _showPhoneConfirmationDialog(String formattedPhone) {
-    final screenContext = context;
-    final l10n = AppLocalizations.of(screenContext)!;
+  Future<bool?> _showPhoneConfirmationDialog(String phoneNumber) {
+    final l10n = AppLocalizations.of(context)!;
 
-    showGeneralDialog(
-      context: screenContext,
+    return showGeneralDialog<bool>(
+      context: context,
       barrierDismissible: true,
       barrierLabel: '',
       barrierColor: AppFrost.scrim(),
@@ -600,7 +462,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      '${_selectedCountry.phoneCode} $formattedPhone',
+                      phoneNumber,
                       style: TextStyle(
                         color: cs.onSurface,
                         fontSize: 18,
@@ -625,85 +487,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       TextButton(
-                        onPressed: () async {
-                          Navigator.pop(context);
-
-                          final fullPhone =
-                              '${_selectedCountry.phoneCode}${_phoneController.text}';
-
-                          if (!_isOnline) {
-                            _showPhoneError(l10n.loginScreenOfflineWait);
-                            return;
-                          }
-
-                          if (ReviewAccess.matchesPhone(fullPhone)) {
-                            Navigator.push(
-                              screenContext,
-                              MaterialPageRoute(
-                                builder: (context) => CodeConfirmationScreen.review(
-                                  phoneNumber:
-                                      '${_selectedCountry.phoneCode} $formattedPhone',
-                                  rawPhone: fullPhone,
-                                  countryCode: _selectedCountry.code,
-                                ),
-                              ),
-                            );
-                            return;
-                          }
-
-                          // #***! эксперим. SMS-вход: предупреждаем про сброс
-                          // сессий, Отмена снимает галочку и не пускает дальше
-                          if (_alwaysSendSms) {
-                            final choice = await _showExperimentalSmsWarning();
-                            logger.d('всегда SMS: предупреждение — $choice');
-                            if (choice == false) {
-                              await _setAlwaysSendSms(false);
-                              return;
-                            }
-                            if (choice != true) return;
-                            if (!screenContext.mounted) return;
-                          }
-
-                          try {
-                            await _ensurePreLoginSession();
-                            final result = await accountModule.requestCode(
-                              fullPhone,
-                            );
-
-                            if (!screenContext.mounted) return;
-                            final phoneNumber =
-                                '${_selectedCountry.phoneCode} $formattedPhone';
-                            final callOut = result.callOut;
-                            Navigator.push(
-                              screenContext,
-                              MaterialPageRoute(
-                                builder: (context) => callOut == null
-                                    ? CodeConfirmationScreen(
-                                        phoneNumber: phoneNumber,
-                                        rawPhone: fullPhone,
-                                        countryCode: _selectedCountry.code,
-                                        token: result.token,
-                                      )
-                                    : CallOutConfirmationScreen(
-                                        phoneNumber: phoneNumber,
-                                        rawPhone: fullPhone,
-                                        countryCode: _selectedCountry.code,
-                                        callOut: callOut,
-                                      ),
-                              ),
-                            );
-                          } catch (e, st) {
-                            logger.d(
-                              '[${api.debugTag}] запрос кода упал: $e\n$st',
-                            );
-                            if (!screenContext.mounted) return;
-                            _showPhoneError(
-                              isSessionStateError(e)
-                                  ? l10n.loginScreenOfflineRetry
-                                  : e.toString(),
-                            );
-                          }
-                        },
+                        onPressed: () => Navigator.pop(context, true),
                         child: Text(
                           l10n.loginDone,
                           style: TextStyle(
@@ -724,12 +508,81 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  void _validateAndSubmit() {
-    if (!_isTOSRead) {
-      _showTOS(context);
-      return;
+  Future<void> _validateAndSubmit() async {
+    if (_submittingPhone || !_isPhoneValid) return;
+    final country = _selectedCountry;
+    final formattedPhone = _phoneController.text;
+    final phoneNumber = '${country.phoneCode} $formattedPhone';
+    final rawPhone = '${country.phoneCode}$formattedPhone';
+    final l10n = AppLocalizations.of(context)!;
+    FocusManager.instance.primaryFocus?.unfocus();
+    setState(() => _submittingPhone = true);
+
+    try {
+      await _termsLoaded;
+      if (!mounted) return;
+      final confirmed = _isTOSRead
+          ? await _showPhoneConfirmationDialog(phoneNumber)
+          : await _showTOS(phoneNumber: phoneNumber);
+      if (!mounted || confirmed != true) return;
+
+      if (!_isOnline) {
+        _showPhoneError(l10n.loginScreenOfflineWait);
+        return;
+      }
+
+      if (ReviewAccess.matchesPhone(rawPhone)) {
+        await Navigator.of(context).push<void>(
+          MaterialPageRoute<void>(
+            builder: (_) => CodeConfirmationScreen.review(
+              phoneNumber: phoneNumber,
+              rawPhone: rawPhone,
+              countryCode: country.code,
+            ),
+          ),
+        );
+        return;
+      }
+
+      if (_alwaysSendSms) {
+        final choice = await _showExperimentalSmsWarning();
+        if (!mounted) return;
+        logger.d('всегда SMS: предупреждение — $choice');
+        if (choice == false) await _setAlwaysSendSms(false);
+        if (choice != true) return;
+      }
+
+      await _ensurePreLoginSession();
+      if (!mounted) return;
+      final result = await accountModule.requestCode(rawPhone);
+      if (!mounted || ModalRoute.of(context)?.isCurrent != true) return;
+      final callOut = result.callOut;
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute<void>(
+          builder: (_) => callOut == null
+              ? CodeConfirmationScreen(
+                  phoneNumber: phoneNumber,
+                  rawPhone: rawPhone,
+                  countryCode: country.code,
+                  token: result.token,
+                )
+              : CallOutConfirmationScreen(
+                  phoneNumber: phoneNumber,
+                  rawPhone: rawPhone,
+                  countryCode: country.code,
+                  callOut: callOut,
+                ),
+        ),
+      );
+    } catch (e, st) {
+      logger.d('[${api.debugTag}] запрос кода упал: $e\n$st');
+      if (!mounted) return;
+      _showPhoneError(
+        isSessionStateError(e) ? l10n.loginScreenOfflineRetry : e.toString(),
+      );
+    } finally {
+      if (mounted) setState(() => _submittingPhone = false);
     }
-    _showPhoneConfirmationDialog(_phoneController.text);
   }
 
   void _notifyConnecting() {
@@ -912,12 +765,7 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: cs.surface,
       body: GestureDetector(
         behavior: HitTestBehavior.translucent,
-        onVerticalDragEnd: (details) {
-          if (details.primaryVelocity != null &&
-              details.primaryVelocity! < -500) {
-            _showTOS(context);
-          }
-        },
+        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
         child: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {
@@ -1107,9 +955,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                     child: Text(
                                       _phoneError!,
                                       style: TextStyle(
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.error,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .error,
                                         fontSize: 13,
                                         fontWeight: FontWeight.w400,
                                       ),
@@ -1196,8 +1044,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                             height: 1.4,
                                             fontWeight: FontWeight.w400,
                                           ),
-                                          recognizer: TapGestureRecognizer()
-                                            ..onTap = () => _showTOS(context),
+                                          recognizer: _submittingPhone
+                                              ? null
+                                              : _termsLink,
                                         ),
                                       ],
                                     ),
@@ -1207,7 +1056,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 16.0),
                                 child: FloatingActionButton(
-                                  onPressed: !_isPhoneValid
+                                  onPressed: !_isPhoneValid || _submittingPhone
                                       ? null
                                       : (_isOnline
                                             ? _validateAndSubmit
@@ -1218,7 +1067,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(50),
                                   ),
-                                  child: _isPhoneValid && !_isOnline
+                                  child:
+                                      _submittingPhone ||
+                                          (_isPhoneValid && !_isOnline)
                                       ? SmallSpinner(
                                           size: 24,
                                           color: cs.onPrimaryContainer,

@@ -104,6 +104,7 @@ class Api {
   int _sessionEpoch = 0;
   bool? _lastInteractive;
   final LoginGate _loginGate = LoginGate();
+  bool get loginWasRejected => _loginGate.loginRejected;
 
   // #***! режим рукопожатия: true — входим в аккаунт (есть токен, боевая версия),
   // false — pre-login без токена (прошлая версия). Значение переживает

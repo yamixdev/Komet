@@ -55,6 +55,8 @@ class VideoNoteController {
   Timer? _timer;
   bool _cancelled = false;
   bool _stopRequested = false;
+  bool _starting = false;
+  bool _stopping = false;
   bool? _frontOverride;
   bool _switchingCamera = false;
 
@@ -83,15 +85,10 @@ class VideoNoteController {
     Haptics.tap();
   }
 
-  Future<void> toggleMode() async {
-    final toVideo = !_videoNoteMode.value;
-    _videoNoteMode.value = toVideo;
+  void toggleMode() {
+    if (_starting || _isRecording.value) return;
+    _videoNoteMode.value = !_videoNoteMode.value;
     Haptics.tap();
-    if (toVideo) {
-      await _initCamera();
-    } else {
-      await _disposeCamera();
-    }
   }
 
   bool get _stub => !_rec.isAvailable;
@@ -105,13 +102,14 @@ class VideoNoteController {
       return;
     }
     if (_rec.textureId != null) return;
-    final access = await _rec.requestAccess();
-    if (!access.granted) {
-      _videoNoteMode.value = false;
-      _notify((l10n) => _accessMessage(l10n, access));
-      return;
-    }
     try {
+      final access = await _rec.requestAccess();
+      if (!isMounted() || _stopRequested) return;
+      if (!access.granted) {
+        _videoNoteMode.value = false;
+        _notify((l10n) => _accessMessage(l10n, access));
+        return;
+      }
       final ok = await _rec.init(
         front: _front,
         cameraId: _frontOverride == null
@@ -120,12 +118,16 @@ class VideoNoteController {
         size: AppVideoNoteResolution.current.value,
         fps: AppVideoNoteFps.current.value,
       );
+      if (!isMounted()) {
+        await _rec.dispose();
+        return;
+      }
       if (!ok) {
         _videoNoteMode.value = false;
         _notify((l10n) => l10n.videoNoteCameraUnavailable);
         return;
       }
-      if (!isMounted() || !_videoNoteMode.value) {
+      if (_stopRequested || !_videoNoteMode.value) {
         await _disposeCamera();
         return;
       }
@@ -134,7 +136,9 @@ class VideoNoteController {
       unawaited(ScreenWake.instance.acquire(this));
     } catch (e) {
       logger.w('initNoteCamera: $e');
+      if (!isMounted()) return;
       await _disposeCamera();
+      if (!isMounted()) return;
       _videoNoteMode.value = false;
       _notify(
         (l10n) => _failureMessage(l10n, e, l10n.videoNoteCameraUnavailable),
@@ -176,13 +180,12 @@ class VideoNoteController {
   }
 
   Future<void> start() async {
-    if (_isRecording.value) return;
+    if (_isRecording.value || _starting || _stopping) return;
+    _starting = true;
     _stopRequested = false;
-    if (!_stub && _rec.textureId == null) {
-      await _initCamera();
-      if (_rec.textureId == null) return;
-    }
     try {
+      if (!_camReady.value) await _initCamera();
+      if (!isMounted() || !_camReady.value || _stopRequested) return;
       if (!_stub) await _rec.start();
       if (!isMounted()) {
         if (!_stub) await _rec.stop();
@@ -210,8 +213,12 @@ class VideoNoteController {
       }
     } catch (e) {
       logger.w('startNoteRecording: $e');
+      if (!isMounted()) return;
       _isRecording.value = false;
+      await _disposeCamera();
       _notify((l10n) => _failureMessage(l10n, e, l10n.videoNoteStartFailed));
+    } finally {
+      _starting = false;
     }
   }
 
@@ -281,6 +288,7 @@ class VideoNoteController {
       _stopRequested = true;
       return;
     }
+    _stopping = true;
     _timer?.cancel();
     _timer = null;
     _stopwatch.stop();
@@ -302,6 +310,12 @@ class VideoNoteController {
       path = _stub ? await _stubClip() : await _rec.stop();
     } catch (e) {
       logger.w('stopNoteRecording: $e');
+    } finally {
+      try {
+        if (isMounted()) await _disposeCamera();
+      } finally {
+        _stopping = false;
+      }
     }
 
     if (shouldCancel || path == null) {

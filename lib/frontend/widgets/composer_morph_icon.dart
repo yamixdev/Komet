@@ -38,12 +38,14 @@ class ComposerMorphIcon extends StatefulWidget {
     required this.color,
     this.size = 24,
     this.duration = const Duration(milliseconds: 400),
+    this.lightweightModeSwitch = false,
   });
 
   final ComposerAction action;
   final Color color;
   final double size;
   final Duration duration;
+  final bool lightweightModeSwitch;
 
   @override
   State<ComposerMorphIcon> createState() => _ComposerMorphIconState();
@@ -60,6 +62,9 @@ class _ComposerMorphIconState extends State<ComposerMorphIcon>
 
   String? _playing;
 
+  bool _isRecordMode(ComposerAction action) =>
+      action == ComposerAction.mic || action == ComposerAction.videocam;
+
   @override
   void initState() {
     super.initState();
@@ -71,7 +76,7 @@ class _ComposerMorphIconState extends State<ComposerMorphIcon>
     if (_warmed) return;
     _warmed = true;
     for (final asset in _morphs.values.toSet()) {
-      AssetLottie(asset).load();
+      AssetLottie(asset, backgroundLoading: true).load();
     }
   }
 
@@ -87,9 +92,15 @@ class _ComposerMorphIconState extends State<ComposerMorphIcon>
     _controller.duration = widget.duration;
     if (widget.action == oldWidget.action) return;
 
-    final asset = _morphs[(oldWidget.action, widget.action)];
+    final useAsset =
+        widget.duration != Duration.zero &&
+        !(widget.lightweightModeSwitch &&
+            _isRecordMode(oldWidget.action) &&
+            _isRecordMode(widget.action));
+    final asset = useAsset ? _morphs[(oldWidget.action, widget.action)] : null;
     if (asset == null) {
-      if (_playing != null) setState(() => _playing = null);
+      _controller.stop();
+      _playing = null;
       return;
     }
 
@@ -110,18 +121,29 @@ class _ComposerMorphIconState extends State<ComposerMorphIcon>
   Widget build(BuildContext context) {
     final asset = _playing;
     if (asset == null) {
-      return Icon(
+      final icon = Icon(
         composerActionIcon(widget.action),
+        key: ValueKey(widget.action),
         color: widget.color,
         size: widget.size,
         weight: 400,
       );
+      if (widget.lightweightModeSwitch && _isRecordMode(widget.action)) {
+        return AnimatedSwitcher(
+          duration: widget.duration,
+          switchInCurve: Curves.easeOut,
+          switchOutCurve: Curves.easeOut,
+          child: icon,
+        );
+      }
+      return icon;
     }
     return SizedBox.square(
       dimension: widget.size,
       child: Lottie.asset(
         asset,
         controller: _controller,
+        backgroundLoading: true,
         fit: BoxFit.contain,
         delegates: LottieDelegates(
           values: [

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:komet/core/protocol/packet.dart';
 
@@ -51,6 +53,52 @@ void main() {
 
       expect(isAuthSessionLostError(error), isFalse);
       expect(isSessionStateError(error), isFalse);
+    });
+  });
+
+  group('cached chats are blocked only on a rejected saved login', () {
+    test(
+      'an explicit LOGIN rejection or expired token blocks cached chats',
+      () {
+        expect(
+          isSavedLoginRejection(
+            const PacketError('synthetic denied login'),
+            loginWasRejected: true,
+          ),
+          isTrue,
+        );
+        expect(
+          isSavedLoginRejection(
+            const SessionExpiredException('synthetic expired session'),
+            loginWasRejected: false,
+          ),
+          isTrue,
+        );
+      },
+    );
+
+    test('transient failures and post-login packet errors preserve cache', () {
+      expect(
+        isSavedLoginRejection(
+          const PacketError('synthetic not ready', errorKey: 'login.not.ready'),
+          loginWasRejected: true,
+        ),
+        isFalse,
+      );
+      expect(
+        isSavedLoginRejection(
+          TimeoutException('synthetic timeout'),
+          loginWasRejected: false,
+        ),
+        isFalse,
+      );
+      expect(
+        isSavedLoginRejection(
+          const PacketError('synthetic profile sync failure'),
+          loginWasRejected: false,
+        ),
+        isFalse,
+      );
     });
   });
 }

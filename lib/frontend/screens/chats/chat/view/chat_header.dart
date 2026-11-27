@@ -93,15 +93,16 @@ class ChatHeaderRow extends StatelessWidget {
       fontFamily: displayFontOf(context),
     );
     return Padding(
-      padding: const EdgeInsets.fromLTRB(10, 4, 10, 8),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       child: Row(
         children: [
           _backWithBadge(
             cs,
             SizedBox(
-              width: 56,
-              height: 56,
+              width: 48,
+              height: 48,
               child: GlossyPill(
+                softGlass: true,
                 color: _pillColor,
                 blurSigma: _pillBlur,
                 liquid: liquid,
@@ -118,27 +119,28 @@ class ChatHeaderRow extends StatelessWidget {
                     embedded ? Symbols.close : Symbols.arrow_back,
                     color: cs.onSurface,
                     weight: 500,
-                    size: 24,
+                    size: 22,
                   ),
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 6),
           Expanded(
             child: GlossyPill(
+              softGlass: true,
               color: _pillColor,
               blurSigma: _pillBlur,
               liquid: liquid,
               backdropKey: backdropKey,
               onTap: onOpenInfo,
-              padding: const EdgeInsets.fromLTRB(6, 6, 16, 6),
+              padding: const EdgeInsets.fromLTRB(5, 4, 10, 4),
               child: Row(
                 children: [
                   _withOnlineDot(
                     cs,
                     _heroAvatar(
-                      44,
+                      38,
                       (d) => chatId == 0
                           ? CircleAvatar(
                               radius: d / 2,
@@ -179,7 +181,7 @@ class ChatHeaderRow extends StatelessWidget {
                             ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -234,15 +236,16 @@ class ChatHeaderRow extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 6),
           GlossyPill(
+            softGlass: true,
             color: _pillColor,
             blurSigma: _pillBlur,
             liquid: liquid,
             backdropKey: backdropKey,
             padding: const EdgeInsets.symmetric(horizontal: 2),
             child: SizedBox(
-              height: 56,
+              height: 48,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
