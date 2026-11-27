@@ -88,19 +88,31 @@ jobs:
           printf 'storePassword=%s\nkeyPassword=%s\nkeyAlias=%s\nstoreFile=komet-release.jks\n' \
             "$KEYSTORE_PASSWORD" "$KEY_PASSWORD" "$KEY_ALIAS" > android/key.properties
 
-      - name: Build and verify Oneme ARM64 APK
+      - name: Build Oneme ARM64 APK
         env:
           VERSION_NAME: ${{ steps.version.outputs.name }}
           VERSION_CODE: ${{ steps.version.outputs.code }}
         run: |
           flutter build apk --release --flavor oneme --target-platform android-arm64 \
             --split-per-abi --obfuscate --split-debug-info=build/symbols \
+            --android-project-arg=force-version-code-ignoring-abi=true \
             --build-name "$VERSION_NAME" --build-number "$VERSION_CODE"
+
+      - name: Verify APK package, version and ABI
+        env:
+          VERSION_NAME: ${{ steps.version.outputs.name }}
+          VERSION_CODE: ${{ steps.version.outputs.code }}
+        run: |
           apk=build/app/outputs/flutter-apk/app-arm64-v8a-oneme-release.apk
           aapt2=$(find "$ANDROID_HOME/build-tools" -name aapt2 | sort -V | tail -n 1)
           test -x "$aapt2"
           metadata=$("$aapt2" dump badging "$apk")
-          grep -F "package: name='ru.oneme.app' versionCode='$VERSION_CODE' versionName='$VERSION_NAME'" <<< "$metadata"
+          package_line=$(grep '^package:' <<< "$metadata")
+          echo "$package_line"
+          if [[ "$package_line" != "package: name='ru.oneme.app' versionCode='$VERSION_CODE' versionName='$VERSION_NAME'"* ]]; then
+            echo "::error::Expected ru.oneme.app version $VERSION_NAME with code $VERSION_CODE"
+            exit 1
+          fi
           python3 - "$apk" <<'PY'
           from sys import argv
           from zipfile import ZipFile
