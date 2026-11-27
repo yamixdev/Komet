@@ -87,6 +87,23 @@ String formatBytes(AppLocalizations l10n, int bytes) {
   return l10n.formatBytesGb((bytes / (1024 * 1024 * 1024)).toStringAsFixed(1));
 }
 
+String formatCompactCount(int count) {
+  if (count < 1000) return '$count';
+  const units = ['K', 'M', 'B'];
+  var scaled = count / 1000;
+  var unit = 0;
+  while (unit < units.length - 1 && (scaled * 10).round() >= 10000) {
+    scaled /= 1000;
+    unit++;
+  }
+  final tenths = (scaled * 10).round();
+  final fraction = tenths % 10;
+  final whole = tenths ~/ 10;
+  return fraction == 0
+      ? '$whole${units[unit]}'
+      : '$whole,$fraction${units[unit]}';
+}
+
 // #***! дальше время и даты в разных видах
 String formatDurationMmSs(Duration d, {bool padMinutes = false}) {
   final m = d.inMinutes;
@@ -132,6 +149,23 @@ String formatDateWords(AppLocalizations l10n, DateTime dt) =>
 
 String formatDateNumeric(DateTime dt) =>
     '${pad2(dt.day)}.${pad2(dt.month)}.${dt.year}';
+
+String formatChatListStamp(
+  AppLocalizations l10n,
+  DateTime dt, {
+  DateTime? now,
+}) {
+  final today = now ?? DateTime.now();
+  final daysAgo = DateTime.utc(
+    today.year,
+    today.month,
+    today.day,
+  ).difference(DateTime.utc(dt.year, dt.month, dt.day)).inDays;
+  if (daysAgo <= 0) return formatClock(dt);
+  if (daysAgo < 7) return formatWeekdayShort(l10n, dt.weekday);
+  if (dt.year == today.year) return formatDayMonth(l10n, dt);
+  return formatDateNumeric(dt);
+}
 
 String formatDateTimeNumeric(DateTime dt) =>
     '${formatDateNumeric(dt)} ${formatClock(dt)}';

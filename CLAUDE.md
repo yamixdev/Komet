@@ -118,6 +118,61 @@ thread, and opening the sticker panel froze the app for up to 300 ms.
 To run the engine test on the host, build the library with `cargo build --release` in
 `native/komet_tlottie/rust` and pass it as `TLOTTIE_LIB`.
 
+## Cache and storage
+
+Settings → Storage (`StorageScreen`) shows what Komet keeps on disk by kind and clears the chosen
+kinds. `CacheJanitor` (`lib/core/cache/cache_janitor.dart`) owns three caches: `MediaCache`
+(`media_cache/`), the flutter_cache_manager image cache (`<tmp>/libCachedImageData`, which notices
+files removed behind its back) and the sticker frames (`tlottie_frames/`, own 256 MB cap). One
+budget, `AppCacheLimit` (pref key still `media_cache_limit_bytes`), covers all three together,
+and when it is exceeded the least recently used files go first, skipping anything touched in the
+last two minutes. Writers report their bytes (`CacheJanitor.noteWrite`) into per-cache totals kept
+in memory; a full pass runs only when a total crosses the budget or a cap, or the last measurement
+is older than 15 minutes (the image cache grows without telling us). The pass lists and stats the
+directories inside `Isolate.run`, so thousands of files cost the UI isolate one message, not one
+event per file. Kept media (`keep_*`, already erased on the server) and the database are shown but
+never evicted. A `MediaCache` file's kind is read from
+its name, so build new names in `media_cache_names.dart` where `mediaCacheKindOf` can see them.
+
+## What's new
+
+Store builds (no self-updater) show «Что нового» once per build from `assets/whats_new/<lang>.txt`.
+`WhatsNewDocument` (`lib/core/whats_new/`, plain Dart) parses it; `WhatsNewRunner` plays scenarios.
+
+- Lines without indentation are the notes; `//` lines are comments.
+- `[words](#scenario)` makes those words tappable, `… → #scenario` at the end of a line makes the
+  whole line a tappable row. A link works in place of `#scenario`: `:settings/storage` (a MAX route,
+  same router as `max.ru/:…`), `max.ru/channel/123`, `https://…`.
+- `#name` starts a scenario; its steps follow, indented, one per line, text in `"double quotes"`.
+
+| Step | Does |
+|------|------|
+| `close` | closes the sheet (any step that navigates closes it first anyway) |
+| `tab chats\|calls\|contacts\|settings` | pops to the shell and switches the bottom tab |
+| `open <link>` | opens a route or link (`:settings/appearance`, `max.ru/…`, `https://…`) |
+| `check <link>` | shows the link check sheet for that address, as a tap on a link in a chat would; opens nothing, whichever button is pressed |
+| `back` | pops the current screen |
+| `scroll top\|bottom\|<target>` | scrolls the current screen |
+| `highlight <target>` | scrolls to the target and pulses it |
+| `tap <target>` | scrolls to the target, flashes it and performs its action (opens, expands, switches) |
+| `hint <target> "text"` | scrolls to the target and shows `showHintBubble` next to it |
+| `notify "text" ["button" #scenario]` | `showCustomNotification`, optionally with an action |
+| `wait <ms>` | pauses (0–10000) |
+| `run #scenario` | runs another scenario |
+
+A target is a `SpotlightTarget(id: …)` around a widget; ids live in `SpotlightIds`
+(`lib/core/whats_new/spotlight_ids.dart`), which is also what the parser checks against. To make a
+new element reachable, add its id there and wrap the widget; give it `onActivate` (the same action
+as its own tap) and list it in `SpotlightIds.tappable` to let `tap` press it. Toggles that change a
+setting stay out of `tappable` — a scenario shows them, never flips them. `open` does not wait for
+the opened screen to close (`Navigator.push` completes only on pop); later steps wait for their
+target to appear instead. A target not built yet (lower in a
+lazy list) is found by scrolling the screen's main list until it mounts. `dart run tool/whats_new.dart`
+checks every language and counts characters against Google Play's 500;
+`dart run tool/whats_new.dart play ru` prints the Play text without links and comments. The test
+`whats_new_document_test.dart` fails on any mistake in the shipped files or when the languages
+differ in scenarios or number of notes.
+
 ## Keyboard and chat panels
 
 The chat follows Telegram: the composer's bottom is always `max(keyboard, visible sticker panel)`
@@ -154,18 +209,22 @@ focus only after the keyboard has stayed closed for 250 ms, so a single zero-ins
 
 ## WebRTC plugin fork
 
-`flutter_webrtc` is overridden with the private fork `KometTeam/flutter-webrtc` (upstream v1.5.2 +
-patches), pinned by commit in `dependency_overrides` in `pubspec.yaml`. To change the plugin, commit
-in the fork, push, and bump the `ref`. The patches:
+`flutter_webrtc` comes from the public fork `KometTeam/flutter-webrtc` (upstream v1.5.2 + patches),
+a git dependency pinned by commit in `dependencies` in `pubspec.yaml` — nothing else depends on the
+plugin, so it needs no `dependency_overrides`, and a fresh clone builds without any token. To change
+the plugin, commit in the fork, push, and bump the `ref` (then `flutter pub get` to refresh
+`pubspec.lock`). The fork's `main` is protected against force-push and deletion, because pub clones
+the fork and a commit no branch reaches is missing from a fresh clone (`Could not find a file named
+"pubspec.yaml"`), while runs with a warm pub cache keep passing and hide it. CI caches pub
+(`cache: true`), so the `git-pins` job in `tests.yml` runs `tool/check_git_pins.sh`: it mirrors
+every git dependency of `pubspec.lock` the way pub does and fails when the `resolved-ref` is in no
+branch or tag. The patches:
 
 - desktop camera open/close and `getStats` run on background threads — libwebrtc does both through
   `Thread::BlockingCall` on its worker thread, and on Linux the window is drawn on the platform
   thread, so the UI froze for the 1–2 s a V4L2 camera takes to start;
 - `VideoFrameTap` hands the frames of a video track to Dart: raw I420 on Linux/Windows, VP8 encoded
   with MediaCodec on Android.
-
-CI fetches the fork with the repo secret `KOMET_DEPS_TOKEN` (read access to the fork): every Flutter
-workflow rewrites the fork URL through workflow-level `GIT_CONFIG_*` env.
 
 Call screen sharing follows MAX: in SERVER topology frames travel as VP8/VP9 over SFU data channels,
 not as an RTP track — `consumerScreenShare` to send (`ScreenSharePipeline`, libvpx encoder in an
@@ -199,7 +258,9 @@ number, and `KOMET_REVIEW_PAYLOAD`, a session token encrypted with the app's own
 (Argon2id + ChaCha20-Poly1305). The key is derived from `<digits of the phone>:<code>`, so the
 payload in the APK is worthless without the pair handed to the reviewer, and neither define is
 committed — `build-android-play.yml` reads them from the `KOMET_REVIEW_PHONE` and
-`KOMET_REVIEW_PAYLOAD` secrets. Without both defines `ReviewAccess.enabled` is false and the login
+`KOMET_REVIEW_PAYLOAD` secrets, `build-ios-appstore.yml` from `KOMET_REVIEW_PHONE_IOS` and
+`KOMET_REVIEW_PAYLOAD_IOS`, so each store reviewer gets its own session and revoking one leaves
+the other working. Without both defines `ReviewAccess.enabled` is false and the login
 screen behaves exactly as before.
 
 Entering the demo number skips `requestCode` and opens `CodeConfirmationScreen.review`, which
@@ -216,6 +277,21 @@ printf '{"token":"…"}' | dart run tool/review_blob.dart '+7 999 999 99 99' '12
 
 The tool derives the key exactly as `ReviewAccess` does and prints one space-free Cyrillic blob —
 that string is the secret's value.
+
+## Login by call (foreign numbers)
+
+The server rarely sends an SMS to a non-Russian number, and the way it confirms one is decided by
+the answer to `AUTH_REQUEST` (17), never by the client:
+
+- **`callOutParams` present** (`{trackId, ttl, pollingInterval}`, both in ms): the user calls a
+  robot. `CallOutConfirmationScreen` polls `AUTH_CHECK_CALL` (294, `{trackId}`) every
+  `pollingInterval` until `ttl` runs out — `status` 0 no number yet, 1 `callNumber` assigned, 2
+  passed, 3 timed out. On 2 it sends `AUTH_BY_TRACK` (291, `{trackId}`), whose answer has the
+  same shape as `AUTH` after a code (`tokenAttrs`, `passwordChallenge`, `presetAvatars`), so 2FA,
+  registration and login go through the same `VerifiedLoginFlow` as `CodeConfirmationScreen`.
+  "Refresh number" is a fresh `START_AUTH`.
+- **no `callOutParams`**: the code screen as usual, but for a non-`RU` country the server calls
+  the user and the code is the last 6 digits of the incoming number — the screen says so.
 
 ## Architecture
 

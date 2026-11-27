@@ -10,6 +10,7 @@ on:
       - 'lib/**'
       - 'scripts/build_ios_share.sh'
       - 'scripts/sign_ios_appstore.py'
+      - 'scripts/validate_ios_appstore_metadata.py'
       - 'native/komet_share/**'
       - 'native/komet_tlottie/**'
       - 'native/crypto-core'
@@ -26,6 +27,7 @@ on:
       - 'lib/**'
       - 'scripts/build_ios_share.sh'
       - 'scripts/sign_ios_appstore.py'
+      - 'scripts/validate_ios_appstore_metadata.py'
       - 'native/komet_share/**'
       - 'native/komet_tlottie/**'
       - 'native/crypto-core'
@@ -39,9 +41,6 @@ on:
       - '.github/actions/pin-kolibri-crates/**'
 
 env:
-  GIT_CONFIG_COUNT: '1'
-  GIT_CONFIG_KEY_0: url.https://x-access-token:${{ secrets.KOMET_DEPS_TOKEN }}@github.com/KometTeam/flutter-webrtc.insteadOf
-  GIT_CONFIG_VALUE_0: https://github.com/KometTeam/flutter-webrtc
   FLUTTER_VERSION: '3.47.0'
 
 jobs:
@@ -84,6 +83,9 @@ jobs:
       - name: Pin kolibri crates
         uses: ./.github/actions/pin-kolibri-crates
 
+      - name: Validate App Store metadata
+        run: python3 scripts/validate_ios_appstore_metadata.py
+
       # Схема max:// принадлежит официальному приложению MAX, App Store-сборка её не заявляет
       - name: Drop the max URL scheme
         run: |
@@ -101,8 +103,8 @@ jobs:
       - name: Build App Store variant (no codesign)
         env:
           KOMET_APPSTORE_BUILD: 'true'
-          KOMET_REVIEW_PHONE: ${{ secrets.KOMET_REVIEW_PHONE }}
-          KOMET_REVIEW_PAYLOAD: ${{ secrets.KOMET_REVIEW_PAYLOAD }}
+          KOMET_REVIEW_PHONE: ${{ secrets.KOMET_REVIEW_PHONE_IOS }}
+          KOMET_REVIEW_PAYLOAD: ${{ secrets.KOMET_REVIEW_PAYLOAD_IOS }}
         run: |
           flutter config --no-enable-swift-package-manager
           flutter build ios --release --no-codesign -v \
@@ -195,11 +197,15 @@ jobs:
           args=(
             build/ios/iphoneos/Runner.app
             --app-profile "$RUNNER_TEMP/appstore.mobileprovision"
+            --app-entitlements ios/Runner/Runner.entitlements
             --identity "$IDENTITY"
             --keychain "$KEYCHAIN_PATH"
           )
           if [ -f "$RUNNER_TEMP/appstore-share.mobileprovision" ]; then
-            args+=(--share-profile "$RUNNER_TEMP/appstore-share.mobileprovision")
+            args+=(
+              --share-profile "$RUNNER_TEMP/appstore-share.mobileprovision"
+              --share-entitlements ios/ShareExtension/ShareExtension.entitlements
+            )
           fi
           python3 scripts/sign_ios_appstore.py "${args[@]}"
 

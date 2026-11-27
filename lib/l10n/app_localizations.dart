@@ -371,7 +371,7 @@ abstract class AppLocalizations {
   /// No description provided for @codeResendSms.
   ///
   /// In en, this message translates to:
-  /// **'Resend code via SMS'**
+  /// **'Resend code'**
   String get codeResendSms;
 
   /// No description provided for @codeError2faMissing.
@@ -1423,6 +1423,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delete'**
   String get msgActionsDelete;
+
+  /// No description provided for @msgActionsRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Send again'**
+  String get msgActionsRetry;
+
+  /// No description provided for @chatRetryFileMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'The file is no longer on this device'**
+  String get chatRetryFileMissing;
 
   /// No description provided for @msgActionsCopied.
   ///
@@ -2719,6 +2731,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Camera unavailable: {error}'**
   String callCameraUnavailable(Object error);
+
+  /// No description provided for @callMicrophonePermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow Komet to access the microphone in device settings to make calls'**
+  String get callMicrophonePermissionDenied;
 
   /// No description provided for @callTooltipMicrophone.
   ///
@@ -4712,12 +4730,6 @@ abstract class AppLocalizations {
   /// **'Uploading {percent}%'**
   String cloudStorageUploadingPercent(String percent);
 
-  /// No description provided for @cloudStorageStartUploadHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Start an upload to see the progress bar'**
-  String get cloudStorageStartUploadHint;
-
   /// No description provided for @cloudStorageEmptyTitle.
   ///
   /// In en, this message translates to:
@@ -4729,12 +4741,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add one?'**
   String get cloudStorageEmptySubtitle;
-
-  /// No description provided for @cloudStorageUpload.
-  ///
-  /// In en, this message translates to:
-  /// **'Upload'**
-  String get cloudStorageUpload;
 
   /// No description provided for @cloudStorageFromFile.
   ///
@@ -4801,6 +4807,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Send'**
   String get cloudStorageSend;
+
+  /// No description provided for @cloudStorageDeleteFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete file'**
+  String get cloudStorageDeleteFile;
+
+  /// No description provided for @cloudStorageFileDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'File deleted'**
+  String get cloudStorageFileDeleted;
+
+  /// No description provided for @cloudStorageDeleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t delete the file'**
+  String get cloudStorageDeleteFailed;
 
   /// No description provided for @cloudStorageAboutTooltip.
   ///
@@ -6457,6 +6481,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Got it'**
   String get authLimitsConfirm;
+
+  /// No description provided for @authLimitsServerNote.
+  ///
+  /// In en, this message translates to:
+  /// **'These limits come from the MAX server. Komet has no control over them.'**
+  String get authLimitsServerNote;
+
+  /// No description provided for @storageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage'**
+  String get storageTitle;
+
+  /// No description provided for @storageTotalCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Komet takes up on this device'**
+  String get storageTotalCaption;
+
+  /// No description provided for @storageCategoryPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos and images'**
+  String get storageCategoryPhotos;
+
+  /// No description provided for @storageCategoryVideos.
+  ///
+  /// In en, this message translates to:
+  /// **'Videos'**
+  String get storageCategoryVideos;
+
+  /// No description provided for @storageCategoryFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Files'**
+  String get storageCategoryFiles;
+
+  /// No description provided for @storageCategoryVoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice messages'**
+  String get storageCategoryVoice;
+
+  /// No description provided for @storageCategoryStickers.
+  ///
+  /// In en, this message translates to:
+  /// **'Stickers'**
+  String get storageCategoryStickers;
+
+  /// No description provided for @storageCategoryKept.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted media'**
+  String get storageCategoryKept;
+
+  /// No description provided for @storageCategoryKeptHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Already erased on the server, can\'t be downloaded again'**
+  String get storageCategoryKeptHint;
+
+  /// No description provided for @storageCategoryDatabase.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages and chats'**
+  String get storageCategoryDatabase;
+
+  /// No description provided for @storageCategoryDatabaseHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Your chat history, never cleared'**
+  String get storageCategoryDatabaseHint;
+
+  /// No description provided for @storageScanning.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculating…'**
+  String get storageScanning;
+
+  /// No description provided for @storageScanFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t calculate the used space'**
+  String get storageScanFailed;
+
+  /// No description provided for @storageEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'The cache is empty'**
+  String get storageEmpty;
+
+  /// No description provided for @storageClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear {size}'**
+  String storageClear(String size);
+
+  /// No description provided for @storageNothingSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose what to clear'**
+  String get storageNothingSelected;
+
+  /// No description provided for @storageCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Freed {size}'**
+  String storageCleared(String size);
+
+  /// No description provided for @storageClearFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t clear the cache'**
+  String get storageClearFailed;
+
+  /// No description provided for @storageClearKeptMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted media can\'t be downloaded again: the server has already erased it. Clear it too?'**
+  String get storageClearKeptMessage;
+
+  /// No description provided for @storageClearKeptConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get storageClearKeptConfirm;
+
+  /// No description provided for @storageLimitTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum cache size'**
+  String get storageLimitTitle;
+
+  /// No description provided for @storageLimitUnlimited.
+  ///
+  /// In en, this message translates to:
+  /// **'No limit'**
+  String get storageLimitUnlimited;
+
+  /// No description provided for @storageLimitHint.
+  ///
+  /// In en, this message translates to:
+  /// **'When the cache outgrows the limit, Komet removes what you haven\'t opened for the longest. Deleted media and messages are never removed by the limit.'**
+  String get storageLimitHint;
 
   /// No description provided for @e2eeTitle.
   ///
@@ -8348,6 +8516,54 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 subscriber} other{{count} subscribers}}'**
   String chatScreenSubscribersCount(int count);
 
+  /// No description provided for @channelRecommendationsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended channels'**
+  String get channelRecommendationsTitle;
+
+  /// No description provided for @channelRecommendationsHide.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide recommendations'**
+  String get channelRecommendationsHide;
+
+  /// No description provided for @channelRecommendationsHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommendations are hidden in this channel'**
+  String get channelRecommendationsHidden;
+
+  /// No description provided for @channelRecommendationsHideEverywhere.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide everywhere'**
+  String get channelRecommendationsHideEverywhere;
+
+  /// No description provided for @channelPostViews.
+  ///
+  /// In en, this message translates to:
+  /// **'Views'**
+  String get channelPostViews;
+
+  /// No description provided for @kometSettingsHideRecommendations.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide recommended channels'**
+  String get kometSettingsHideRecommendations;
+
+  /// No description provided for @kometSettingsHideRecommendationsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t show similar channels at the bottom of a channel'**
+  String get kometSettingsHideRecommendationsSubtitle;
+
+  /// No description provided for @chatScreenFormatMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Formatting'**
+  String get chatScreenFormatMenu;
+
   /// No description provided for @chatScreenFormatHeading.
   ///
   /// In en, this message translates to:
@@ -8435,7 +8651,7 @@ abstract class AppLocalizations {
   /// No description provided for @linkConfirmBody.
   ///
   /// In en, this message translates to:
-  /// **'The link text doesn\'t match its address, and you haven\'t visited this site before. Check the address above before you continue.'**
+  /// **'You haven\'t visited this site before. Check the address above before you continue.'**
   String get linkConfirmBody;
 
   /// No description provided for @linkConfirmOpen.
@@ -8449,6 +8665,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cancel'**
   String get linkConfirmCancel;
+
+  /// No description provided for @linkConfirmSuspiciousTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Suspicious link'**
+  String get linkConfirmSuspiciousTitle;
+
+  /// No description provided for @linkConfirmOpenAnyway.
+  ///
+  /// In en, this message translates to:
+  /// **'Open anyway'**
+  String get linkConfirmOpenAnyway;
+
+  /// No description provided for @linkConfirmDontOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t open'**
+  String get linkConfirmDontOpen;
+
+  /// No description provided for @linkWarningTextMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The text shows {shown}, but it leads to {host}'**
+  String linkWarningTextMismatch(String shown, String host);
+
+  /// No description provided for @linkWarningUserInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Actually leads to {host}'**
+  String linkWarningUserInfo(String host);
+
+  /// No description provided for @linkWarningMixedScripts.
+  ///
+  /// In en, this message translates to:
+  /// **'Mixed alphabets: {letters}'**
+  String linkWarningMixedScripts(String letters);
+
+  /// No description provided for @linkWarningLookalike.
+  ///
+  /// In en, this message translates to:
+  /// **'Only looks Latin: the letters are {script}'**
+  String linkWarningLookalike(String script);
+
+  /// No description provided for @linkWarningInvisible.
+  ///
+  /// In en, this message translates to:
+  /// **'The address hides invisible characters'**
+  String get linkWarningInvisible;
+
+  /// No description provided for @linkWarningIpAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Leads to an IP address, not a site'**
+  String get linkWarningIpAddress;
+
+  /// No description provided for @linkWarningScheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens through {scheme}:, not in a browser'**
+  String linkWarningScheme(String scheme);
+
+  /// No description provided for @linkWarningLetter.
+  ///
+  /// In en, this message translates to:
+  /// **'“{letter}”'**
+  String linkWarningLetter(String letter);
+
+  /// No description provided for @linkWarningLetters.
+  ///
+  /// In en, this message translates to:
+  /// **'{letters} from {script}'**
+  String linkWarningLetters(String letters, String script);
+
+  /// No description provided for @linkScriptLatin.
+  ///
+  /// In en, this message translates to:
+  /// **'Latin'**
+  String get linkScriptLatin;
+
+  /// No description provided for @linkScriptCyrillic.
+  ///
+  /// In en, this message translates to:
+  /// **'Cyrillic'**
+  String get linkScriptCyrillic;
+
+  /// No description provided for @linkScriptGreek.
+  ///
+  /// In en, this message translates to:
+  /// **'Greek'**
+  String get linkScriptGreek;
+
+  /// No description provided for @linkScriptArmenian.
+  ///
+  /// In en, this message translates to:
+  /// **'Armenian'**
+  String get linkScriptArmenian;
 
   /// No description provided for @chatScreenMessageTooLong.
   ///
@@ -8660,6 +8972,96 @@ abstract class AppLocalizations {
   /// **'Looks great 🔥'**
   String get chatWallpaperSheetSampleOutgoing;
 
+  /// No description provided for @chatWallpaperSheetInherit.
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get chatWallpaperSheetInherit;
+
+  /// No description provided for @chatWallpaperSheetCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Current'**
+  String get chatWallpaperSheetCurrent;
+
+  /// No description provided for @chatWallpaperSheetCustomGradient.
+  ///
+  /// In en, this message translates to:
+  /// **'Gradient'**
+  String get chatWallpaperSheetCustomGradient;
+
+  /// No description provided for @chatWallpaperSheetApply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get chatWallpaperSheetApply;
+
+  /// No description provided for @chatWallpaperPresetKomet.
+  ///
+  /// In en, this message translates to:
+  /// **'Comet'**
+  String get chatWallpaperPresetKomet;
+
+  /// No description provided for @chatWallpaperPresetGraphite.
+  ///
+  /// In en, this message translates to:
+  /// **'Graphite'**
+  String get chatWallpaperPresetGraphite;
+
+  /// No description provided for @chatWallpaperPresetInk.
+  ///
+  /// In en, this message translates to:
+  /// **'Ink'**
+  String get chatWallpaperPresetInk;
+
+  /// No description provided for @chatWallpaperPresetPine.
+  ///
+  /// In en, this message translates to:
+  /// **'Pine'**
+  String get chatWallpaperPresetPine;
+
+  /// No description provided for @chatWallpaperPresetPlum.
+  ///
+  /// In en, this message translates to:
+  /// **'Plum'**
+  String get chatWallpaperPresetPlum;
+
+  /// No description provided for @chatWallpaperPresetUmber.
+  ///
+  /// In en, this message translates to:
+  /// **'Umber'**
+  String get chatWallpaperPresetUmber;
+
+  /// No description provided for @chatWallpaperPresetPaper.
+  ///
+  /// In en, this message translates to:
+  /// **'Paper'**
+  String get chatWallpaperPresetPaper;
+
+  /// No description provided for @chatWallpaperPresetFog.
+  ///
+  /// In en, this message translates to:
+  /// **'Fog'**
+  String get chatWallpaperPresetFog;
+
+  /// No description provided for @chatWallpaperPresetSage.
+  ///
+  /// In en, this message translates to:
+  /// **'Sage'**
+  String get chatWallpaperPresetSage;
+
+  /// No description provided for @chatWallpaperPresetSand.
+  ///
+  /// In en, this message translates to:
+  /// **'Sand'**
+  String get chatWallpaperPresetSand;
+
+  /// No description provided for @chatWallpaperPresetPowder.
+  ///
+  /// In en, this message translates to:
+  /// **'Powder'**
+  String get chatWallpaperPresetPowder;
+
   /// No description provided for @chatWallpaperSheetNone.
   ///
   /// In en, this message translates to:
@@ -8845,6 +9247,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Close the mini app?'**
   String get webAppScreenCloseConfirm;
+
+  /// No description provided for @webAppUnsupportedPlatform.
+  ///
+  /// In en, this message translates to:
+  /// **'Mini apps aren\'t available in the Linux version yet'**
+  String get webAppUnsupportedPlatform;
 
   /// No description provided for @voiceRecordUnsupported.
   ///
@@ -9494,6 +9902,84 @@ abstract class AppLocalizations {
   /// **'The code expired — we sent a new one'**
   String get codeConfirmationCodeExpired;
 
+  /// No description provided for @codeConfirmationIncomingCall.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'re calling your number. Enter the last 6 digits of the incoming number. If there\'s no call, check SMS and the “Verification codes” chat in MAX.'**
+  String get codeConfirmationIncomingCall;
+
+  /// No description provided for @callOutDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Call the number below from this number to confirm sign-in. Wait for the robot to answer and follow its prompts.'**
+  String get callOutDescription;
+
+  /// No description provided for @callOutWaitingNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Getting a number to call…'**
+  String get callOutWaitingNumber;
+
+  /// No description provided for @callOutTapToCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to copy'**
+  String get callOutTapToCopy;
+
+  /// No description provided for @callOutTimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Call within {time}'**
+  String callOutTimer(String time);
+
+  /// No description provided for @callOutExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Time to call is up — refresh the number'**
+  String get callOutExpired;
+
+  /// No description provided for @callOutVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Call received, signing in…'**
+  String get callOutVerified;
+
+  /// No description provided for @callOutDial.
+  ///
+  /// In en, this message translates to:
+  /// **'Call {number}'**
+  String callOutDial(String number);
+
+  /// No description provided for @callOutDialPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Call'**
+  String get callOutDialPending;
+
+  /// No description provided for @callOutRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh number'**
+  String get callOutRefresh;
+
+  /// No description provided for @callOutNewNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'We got a new number — call it instead'**
+  String get callOutNewNumber;
+
+  /// No description provided for @callOutRefreshFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t refresh the number: {error}'**
+  String callOutRefreshFailed(String error);
+
+  /// No description provided for @callOutCommonError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t sign in, please try again'**
+  String get callOutCommonError;
+
   /// No description provided for @pollViewVoteFailed.
   ///
   /// In en, this message translates to:
@@ -9547,6 +10033,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Customization'**
   String get customizationTitle;
+
+  /// No description provided for @chatFoldersAddTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to folder'**
+  String get chatFoldersAddTo;
+
+  /// No description provided for @chatFoldersUpdateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t update the folder “{title}”'**
+  String chatFoldersUpdateFailed(String title);
 
   /// No description provided for @folderActionNewFolder.
   ///
@@ -10609,6 +11107,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Read messages without marking them as read'**
   String get kometSettingsAntiReadSubtitle;
+
+  /// No description provided for @kometSettingsAntiStoryViewSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch stories without appearing among their viewers. The author still sees your reactions and replies'**
+  String get kometSettingsAntiStoryViewSubtitle;
 
   /// No description provided for @kometSettingsSelfOnlineCheckSubtitle.
   ///
@@ -12296,78 +12800,6 @@ abstract class AppLocalizations {
   /// **'Couldn\'t recognize the voice'**
   String get transcriptionNotRecognized;
 
-  /// No description provided for @chatWallpaperThemeOcean.
-  ///
-  /// In en, this message translates to:
-  /// **'Ocean'**
-  String get chatWallpaperThemeOcean;
-
-  /// No description provided for @chatWallpaperThemeSunset.
-  ///
-  /// In en, this message translates to:
-  /// **'Sunset'**
-  String get chatWallpaperThemeSunset;
-
-  /// No description provided for @chatWallpaperThemeLavender.
-  ///
-  /// In en, this message translates to:
-  /// **'Lavender'**
-  String get chatWallpaperThemeLavender;
-
-  /// No description provided for @chatWallpaperThemeMint.
-  ///
-  /// In en, this message translates to:
-  /// **'Mint'**
-  String get chatWallpaperThemeMint;
-
-  /// No description provided for @chatWallpaperThemeGraphite.
-  ///
-  /// In en, this message translates to:
-  /// **'Graphite'**
-  String get chatWallpaperThemeGraphite;
-
-  /// No description provided for @chatWallpaperThemeSky.
-  ///
-  /// In en, this message translates to:
-  /// **'Sky'**
-  String get chatWallpaperThemeSky;
-
-  /// No description provided for @chatWallpaperThemePeach.
-  ///
-  /// In en, this message translates to:
-  /// **'Peach'**
-  String get chatWallpaperThemePeach;
-
-  /// No description provided for @chatWallpaperThemeForest.
-  ///
-  /// In en, this message translates to:
-  /// **'Forest'**
-  String get chatWallpaperThemeForest;
-
-  /// No description provided for @chatWallpaperThemeGrape.
-  ///
-  /// In en, this message translates to:
-  /// **'Grape'**
-  String get chatWallpaperThemeGrape;
-
-  /// No description provided for @chatWallpaperThemeNight.
-  ///
-  /// In en, this message translates to:
-  /// **'Night'**
-  String get chatWallpaperThemeNight;
-
-  /// No description provided for @chatWallpaperThemeRose.
-  ///
-  /// In en, this message translates to:
-  /// **'Rose'**
-  String get chatWallpaperThemeRose;
-
-  /// No description provided for @chatWallpaperThemeAmber.
-  ///
-  /// In en, this message translates to:
-  /// **'Amber'**
-  String get chatWallpaperThemeAmber;
-
   /// No description provided for @mediaSaveFileNotFound.
   ///
   /// In en, this message translates to:
@@ -12554,6 +12986,18 @@ abstract class AppLocalizations {
   /// **'An admin stopped your screen sharing'**
   String get callScreenMutedByAdmin;
 
+  /// No description provided for @callMicUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No microphone access — others can\'t hear you'**
+  String get callMicUnavailable;
+
+  /// No description provided for @callMicSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get callMicSettings;
+
   /// No description provided for @callMediaLocked.
   ///
   /// In en, this message translates to:
@@ -12697,6 +13141,210 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You lowered the participant\'s hand'**
   String get callYouLoweredHand;
+
+  /// No description provided for @whatsNewBannerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Komet updated to {version}'**
+  String whatsNewBannerTitle(Object version);
+
+  /// No description provided for @whatsNewBannerSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to see what\'s new'**
+  String get whatsNewBannerSubtitle;
+
+  /// No description provided for @whatsNewSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s new in {version}'**
+  String whatsNewSheetTitle(Object version);
+
+  /// No description provided for @whatsNewNoNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Bug fixes and stability improvements.'**
+  String get whatsNewNoNotes;
+
+  /// No description provided for @whatsNewDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get whatsNewDone;
+
+  /// No description provided for @appearanceAnimationsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Animations'**
+  String get appearanceAnimationsTitle;
+
+  /// No description provided for @appearanceAnimationsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Transitions between screens and tabs. Turn off to open everything instantly'**
+  String get appearanceAnimationsSubtitle;
+
+  /// No description provided for @login2faRequiredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set a password on the device you\'ve signed in to MAX on'**
+  String get login2faRequiredTitle;
+
+  /// No description provided for @login2faRequiredSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'To do so, go to Settings → Security → Sign-in password'**
+  String get login2faRequiredSteps;
+
+  /// No description provided for @login2faRequiredThen.
+  ///
+  /// In en, this message translates to:
+  /// **'Then you\'ll be able to sign in here'**
+  String get login2faRequiredThen;
+
+  /// No description provided for @login2faRequiredNotKomet.
+  ///
+  /// In en, this message translates to:
+  /// **'This is NOT a Komet error. MAX requires it from everyone.'**
+  String get login2faRequiredNotKomet;
+
+  /// No description provided for @login2faRequiredRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try signing in again'**
+  String get login2faRequiredRetry;
+
+  /// No description provided for @login2faRequiredNoAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'I can\'t access the account'**
+  String get login2faRequiredNoAccess;
+
+  /// No description provided for @login2faRequiredLinkFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open go.max.ru/reset-session'**
+  String get login2faRequiredLinkFailed;
+
+  /// No description provided for @informerBannerServerNote.
+  ///
+  /// In en, this message translates to:
+  /// **'This is an announcement from the MAX server. It isn\'t related to Komet.'**
+  String get informerBannerServerNote;
+
+  /// No description provided for @storyReplyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reply'**
+  String get storyReplyHint;
+
+  /// No description provided for @storyReplySent.
+  ///
+  /// In en, this message translates to:
+  /// **'Message sent'**
+  String get storyReplySent;
+
+  /// No description provided for @storyReplyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t send the reply'**
+  String get storyReplyFailed;
+
+  /// No description provided for @storyReplyEncrypted.
+  ///
+  /// In en, this message translates to:
+  /// **'This chat is encrypted, so story replies aren\'t available'**
+  String get storyReplyEncrypted;
+
+  /// No description provided for @storyLikeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t react to the story'**
+  String get storyLikeFailed;
+
+  /// No description provided for @storyReplyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Story'**
+  String get storyReplyLabel;
+
+  /// No description provided for @storyReplyGone.
+  ///
+  /// In en, this message translates to:
+  /// **'A story was here'**
+  String get storyReplyGone;
+
+  /// No description provided for @storyReplyUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The story is no longer available'**
+  String get storyReplyUnavailable;
+
+  /// No description provided for @storyMenuProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to profile'**
+  String get storyMenuProfile;
+
+  /// No description provided for @storyMenuHide.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide author\'s stories'**
+  String get storyMenuHide;
+
+  /// No description provided for @storyMenuSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save to gallery'**
+  String get storyMenuSave;
+
+  /// No description provided for @storyMenuReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Report'**
+  String get storyMenuReport;
+
+  /// No description provided for @storyHiddenNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'The author\'s stories are hidden'**
+  String get storyHiddenNotice;
+
+  /// No description provided for @storyHideFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t hide the stories'**
+  String get storyHideFailed;
+
+  /// No description provided for @storyReplyOpenChat.
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get storyReplyOpenChat;
+
+  /// No description provided for @storyHiddenUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get storyHiddenUndo;
+
+  /// No description provided for @storyMenuShow.
+  ///
+  /// In en, this message translates to:
+  /// **'Show author\'s stories'**
+  String get storyMenuShow;
+
+  /// No description provided for @storyShownNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'The author\'s stories are visible again'**
+  String get storyShownNotice;
+
+  /// No description provided for @storyShowFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t show the stories'**
+  String get storyShowFailed;
 }
 
 class _AppLocalizationsDelegate

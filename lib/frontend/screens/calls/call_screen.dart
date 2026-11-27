@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 import 'dart:math' show cos, pi;
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -7,11 +8,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart'
     show MediaStream, RTCVideoRenderer, RTCVideoValue, RTCVideoViewObjectFit;
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../../../backend/modules/messages.dart' show ContactCache;
 import '../../../core/cache/info_cache.dart';
 import '../../../core/calls/active_call.dart';
 import '../../../core/calls/call_controller.dart';
+import '../../../core/calls/call_permissions.dart';
 import '../../../core/calls/call_info.dart';
 import '../../../core/calls/call_session.dart';
 import '../../../core/config/app_colors.dart';
@@ -68,6 +71,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
   StreamSubscription<void>? _infoSub;
   StreamSubscription<void>? _kometSub;
   StreamSubscription<CallChatMessage>? _chatSub;
+  StreamSubscription<CallNotice>? _noticeSub;
   StreamSubscription<MediaStream>? _remoteStreamSub;
   bool _chatOpen = false;
   bool _stageOpen = false;
@@ -273,8 +277,14 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     _tileStreamSub = session.participantStreamUpdates.listen(_onTileStream);
     _kometSub = session.peerKometDetected.listen((_) => _showKometBadge());
     _chatSub = session.chatMessages.listen(_onChatMessage);
+    _noticeSub = session.notices.listen(_onNotice);
     if (session.peerIsKomet) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _showKometBadge());
+    }
+    if (session.micUnavailable) {
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _showMicUnavailable(),
+      );
     }
     final existing = session.remoteStream;
     if (existing != null) _attachStream(existing);
@@ -299,6 +309,22 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     if (!mounted) return;
     final l10n = AppLocalizations.of(context)!;
     showCustomNotification(context, l10n.callKometDetectedNotification);
+  }
+
+  void _onNotice(CallNotice notice) {
+    if (notice == CallNotice.micUnavailable) _showMicUnavailable();
+  }
+
+  void _showMicUnavailable() {
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context)!;
+    showCustomNotification(
+      context,
+      l10n.callMicUnavailable,
+      action: Platform.isAndroid || Platform.isIOS
+          ? (label: l10n.callMicSettings, onTap: () => openAppSettings())
+          : null,
+    );
   }
 
   void _onChatMessage(CallChatMessage message) {
@@ -358,6 +384,13 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
       final session = await CallController.instance.acceptIncoming(incoming);
       if (!mounted) return;
       _bind(session);
+    } on CallMicrophonePermissionException {
+      if (!mounted) return;
+      setState(() => _incomingPending = true);
+      showCustomNotification(
+        context,
+        AppLocalizations.of(context)!.callMicrophonePermissionDenied,
+      );
     } catch (_) {
       _close();
     }
@@ -469,6 +502,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     _infoSub?.cancel();
     _kometSub?.cancel();
     _chatSub?.cancel();
+    _noticeSub?.cancel();
     _remoteStreamSub?.cancel();
     _tileStreamSub?.cancel();
     for (final renderer in _tileRenderers.values) {

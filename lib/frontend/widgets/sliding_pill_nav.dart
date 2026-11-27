@@ -10,19 +10,37 @@ import '../../core/config/app_visual_style.dart';
 import 'animated_lottie_icon.dart';
 import 'glossy_pill.dart';
 import 'liquid_glass.dart';
+import 'spotlight.dart';
 
 class PillNavItem {
   final IconData icon;
   final String label;
   final bool longPressable;
   final String? animationAsset;
+  final String? spotlightId;
 
   const PillNavItem({
     required this.icon,
     required this.label,
     this.longPressable = false,
     this.animationAsset,
+    this.spotlightId,
   });
+
+  Widget spotlit(
+    BorderRadius borderRadius,
+    VoidCallback onActivate,
+    Widget child,
+  ) {
+    final id = spotlightId;
+    if (id == null) return child;
+    return SpotlightTarget(
+      id: id,
+      borderRadius: borderRadius,
+      onActivate: onActivate,
+      child: child,
+    );
+  }
 }
 
 class PillNavGeometry {
@@ -133,18 +151,24 @@ class SlidingPillNav extends StatelessWidget {
     final base = liquid
         ? (translucent ? backgroundColor! : AppLiquidGlass.navTint(cs))
         : (backgroundColor ??
-              (frost ? AppFrost.glassTint(cs) : cs.surfaceContainerHigh));
+              (frost ? AppFrost.controlTint(cs) : cs.surfaceContainerHigh));
     final useGradient = glossy && gradient && !liquid;
     final frosted = frost && !liquid && base.a < 1;
+    final fill = BoxDecoration(
+      color: useGradient || liquid ? null : base,
+      gradient: useGradient ? GlossyDecor.fillGradient(base) : null,
+    );
 
-    return Container(
+    final bar = Container(
       height: height,
       padding: const EdgeInsets.symmetric(horizontal: 2),
       decoration: BoxDecoration(
-        color: useGradient || liquid ? null : base,
-        gradient: useGradient ? GlossyDecor.fillGradient(base) : null,
+        color: frosted ? null : fill.color,
+        gradient: frosted ? null : fill.gradient,
         borderRadius: BorderRadius.circular(34),
-        border: glossy
+        border: frosted
+            ? Border.fromBorderSide(AppFrost.hairline(cs))
+            : glossy
             ? GlossyDecor.rimBorder(base)
             : (borderColor != null
                   ? Border.all(color: borderColor!, width: 0.5)
@@ -184,22 +208,6 @@ class SlidingPillNav extends StatelessWidget {
                     ),
                   ),
                 ),
-              if (frosted)
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(34),
-                      child: BackdropFilter(
-                        filter: ui.ImageFilter.blur(
-                          sigmaX: AppFrost.sigma,
-                          sigmaY: AppFrost.sigma,
-                        ),
-                        backdropGroupKey: backdropKey,
-                        child: const SizedBox.expand(),
-                      ),
-                    ),
-                  ),
-                ),
               if (useGradient)
                 Positioned.fill(
                   child: IgnorePointer(
@@ -235,23 +243,27 @@ class SlidingPillNav extends StatelessWidget {
                       duration: animationDuration,
                       curve: Curves.easeOutCubic,
                       width: _interpWidth(i, layout),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(26),
-                        child: _PillNavCell(
-                          key: ValueKey('pill-nav-item-$i'),
-                          item: items[i],
-                          selected: i == visualSel,
-                          cs: cs,
-                          animationDuration: animationDuration,
-                          iconSize: iconSize,
-                          labelGap: labelGap,
-                          iconsOnly: iconsOnly,
-                          onTap: () => onTap(i),
-                          onLongPress:
-                              (onItemLongPress == null ||
-                                  !items[i].longPressable)
-                              ? null
-                              : (pos) => onItemLongPress!(i, pos),
+                      child: items[i].spotlit(
+                        BorderRadius.circular(26),
+                        () => onTap(i),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(26),
+                          child: _PillNavCell(
+                            key: ValueKey('pill-nav-item-$i'),
+                            item: items[i],
+                            selected: i == visualSel,
+                            cs: cs,
+                            animationDuration: animationDuration,
+                            iconSize: iconSize,
+                            labelGap: labelGap,
+                            iconsOnly: iconsOnly,
+                            onTap: () => onTap(i),
+                            onLongPress:
+                                (onItemLongPress == null ||
+                                    !items[i].longPressable)
+                                ? null
+                                : (pos) => onItemLongPress!(i, pos),
+                          ),
                         ),
                       ),
                     );
@@ -262,6 +274,27 @@ class SlidingPillNav extends StatelessWidget {
           );
         },
       ),
+    );
+    if (!frosted) return bar;
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: IgnorePointer(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(34),
+              child: BackdropFilter(
+                filter: ui.ImageFilter.blur(
+                  sigmaX: AppFrost.sigma,
+                  sigmaY: AppFrost.sigma,
+                ),
+                backdropGroupKey: backdropKey,
+                child: DecoratedBox(decoration: fill),
+              ),
+            ),
+          ),
+        ),
+        bar,
+      ],
     );
   }
 }

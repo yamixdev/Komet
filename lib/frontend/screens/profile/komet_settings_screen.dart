@@ -99,6 +99,16 @@ class KometSettingsScreen extends StatelessWidget {
                     onChanged: KometSettings.setShowTypingTime,
                   ),
                 ),
+                ValueListenableBuilder<bool>(
+                  valueListenable: KometSettings.hideChannelRecommendations,
+                  builder: (context, value, _) => SettingsToggleTile(
+                    icon: Symbols.explore_off,
+                    label: l10n.kometSettingsHideRecommendations,
+                    subtitle: l10n.kometSettingsHideRecommendationsSubtitle,
+                    value: value,
+                    onChanged: KometSettings.setHideChannelRecommendations,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 20),
@@ -128,7 +138,6 @@ class KometSettingsScreen extends StatelessWidget {
                     onChanged: KometSettings.setShowHiddenChats,
                   ),
                 ),
-
               ],
             ),
             const SizedBox(height: 20),
@@ -156,7 +165,17 @@ class KometSettingsScreen extends StatelessWidget {
                       label: 'Anti read',
                       subtitle: l10n.kometSettingsAntiReadSubtitle,
                       value: value,
-                      onChanged: KometSettings.setAntiRead,
+                      onChanged: _setAntiRead,
+                    ),
+                  ),
+                  ValueListenableBuilder<bool>(
+                    valueListenable: KometSettings.antiStoryView,
+                    builder: (context, value, _) => SettingsToggleTile(
+                      icon: Symbols.history_toggle_off,
+                      label: 'Anti story view',
+                      subtitle: l10n.kometSettingsAntiStoryViewSubtitle,
+                      value: value,
+                      onChanged: KometSettings.setAntiStoryView,
                     ),
                   ),
                 ],
@@ -199,7 +218,17 @@ class KometSettingsScreen extends StatelessWidget {
 
   Future<void> _setGhostMode(bool value) async {
     await KometSettings.setGhostMode(value);
-    if (!value) await chats.restoreGhostReads();
+    await _restoreReadsWhenSent();
     api.sendPing(interactive: !value);
+  }
+
+  Future<void> _setAntiRead(bool value) async {
+    await KometSettings.setAntiRead(value);
+    await _restoreReadsWhenSent();
+  }
+
+  Future<void> _restoreReadsWhenSent() async {
+    if (KometSettings.ghostMode.value || KometSettings.antiRead.value) return;
+    await chats.restoreGhostReads();
   }
 }

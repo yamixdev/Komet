@@ -156,7 +156,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get codeResendSms => 'Resend code via SMS';
+  String get codeResendSms => 'Resend code';
 
   @override
   String get codeError2faMissing => 'Error: missing data for 2FA';
@@ -701,6 +701,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get msgActionsDelete => 'Delete';
+
+  @override
+  String get msgActionsRetry => 'Send again';
+
+  @override
+  String get chatRetryFileMissing => 'The file is no longer on this device';
 
   @override
   String get msgActionsCopied => 'Copied';
@@ -1399,6 +1405,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String callCameraUnavailable(Object error) {
     return 'Camera unavailable: $error';
   }
+
+  @override
+  String get callMicrophonePermissionDenied =>
+      'Allow Komet to access the microphone in device settings to make calls';
 
   @override
   String get callTooltipMicrophone => 'Microphone';
@@ -2464,17 +2474,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get cloudStorageStartUploadHint =>
-      'Start an upload to see the progress bar';
-
-  @override
   String get cloudStorageEmptyTitle => 'No cloud files yet...';
 
   @override
   String get cloudStorageEmptySubtitle => 'Add one?';
-
-  @override
-  String get cloudStorageUpload => 'Upload';
 
   @override
   String get cloudStorageFromFile => 'From file';
@@ -2510,6 +2513,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudStorageSend => 'Send';
+
+  @override
+  String get cloudStorageDeleteFile => 'Delete file';
+
+  @override
+  String get cloudStorageFileDeleted => 'File deleted';
+
+  @override
+  String get cloudStorageDeleteFailed => 'Couldn\'t delete the file';
 
   @override
   String get cloudStorageAboutTooltip => 'How storage works';
@@ -3441,6 +3453,86 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authLimitsConfirm => 'Got it';
+
+  @override
+  String get authLimitsServerNote =>
+      'These limits come from the MAX server. Komet has no control over them.';
+
+  @override
+  String get storageTitle => 'Storage';
+
+  @override
+  String get storageTotalCaption => 'Komet takes up on this device';
+
+  @override
+  String get storageCategoryPhotos => 'Photos and images';
+
+  @override
+  String get storageCategoryVideos => 'Videos';
+
+  @override
+  String get storageCategoryFiles => 'Files';
+
+  @override
+  String get storageCategoryVoice => 'Voice messages';
+
+  @override
+  String get storageCategoryStickers => 'Stickers';
+
+  @override
+  String get storageCategoryKept => 'Deleted media';
+
+  @override
+  String get storageCategoryKeptHint =>
+      'Already erased on the server, can\'t be downloaded again';
+
+  @override
+  String get storageCategoryDatabase => 'Messages and chats';
+
+  @override
+  String get storageCategoryDatabaseHint => 'Your chat history, never cleared';
+
+  @override
+  String get storageScanning => 'Calculating…';
+
+  @override
+  String get storageScanFailed => 'Couldn\'t calculate the used space';
+
+  @override
+  String get storageEmpty => 'The cache is empty';
+
+  @override
+  String storageClear(String size) {
+    return 'Clear $size';
+  }
+
+  @override
+  String get storageNothingSelected => 'Choose what to clear';
+
+  @override
+  String storageCleared(String size) {
+    return 'Freed $size';
+  }
+
+  @override
+  String get storageClearFailed => 'Couldn\'t clear the cache';
+
+  @override
+  String get storageClearKeptMessage =>
+      'Deleted media can\'t be downloaded again: the server has already erased it. Clear it too?';
+
+  @override
+  String get storageClearKeptConfirm => 'Clear';
+
+  @override
+  String get storageLimitTitle => 'Maximum cache size';
+
+  @override
+  String get storageLimitUnlimited => 'No limit';
+
+  @override
+  String get storageLimitHint =>
+      'When the cache outgrows the limit, Komet removes what you haven\'t opened for the longest. Deleted media and messages are never removed by the limit.';
 
   @override
   String get e2eeTitle => 'End-to-end encryption';
@@ -4573,6 +4665,32 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get channelRecommendationsTitle => 'Recommended channels';
+
+  @override
+  String get channelRecommendationsHide => 'Hide recommendations';
+
+  @override
+  String get channelRecommendationsHidden =>
+      'Recommendations are hidden in this channel';
+
+  @override
+  String get channelRecommendationsHideEverywhere => 'Hide everywhere';
+
+  @override
+  String get channelPostViews => 'Views';
+
+  @override
+  String get kometSettingsHideRecommendations => 'Hide recommended channels';
+
+  @override
+  String get kometSettingsHideRecommendationsSubtitle =>
+      'Don\'t show similar channels at the bottom of a channel';
+
+  @override
+  String get chatScreenFormatMenu => 'Formatting';
+
+  @override
   String get chatScreenFormatHeading => 'Heading';
 
   @override
@@ -4616,13 +4734,75 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get linkConfirmBody =>
-      'The link text doesn\'t match its address, and you haven\'t visited this site before. Check the address above before you continue.';
+      'You haven\'t visited this site before. Check the address above before you continue.';
 
   @override
   String get linkConfirmOpen => 'Open';
 
   @override
   String get linkConfirmCancel => 'Cancel';
+
+  @override
+  String get linkConfirmSuspiciousTitle => 'Suspicious link';
+
+  @override
+  String get linkConfirmOpenAnyway => 'Open anyway';
+
+  @override
+  String get linkConfirmDontOpen => 'Don\'t open';
+
+  @override
+  String linkWarningTextMismatch(String shown, String host) {
+    return 'The text shows $shown, but it leads to $host';
+  }
+
+  @override
+  String linkWarningUserInfo(String host) {
+    return 'Actually leads to $host';
+  }
+
+  @override
+  String linkWarningMixedScripts(String letters) {
+    return 'Mixed alphabets: $letters';
+  }
+
+  @override
+  String linkWarningLookalike(String script) {
+    return 'Only looks Latin: the letters are $script';
+  }
+
+  @override
+  String get linkWarningInvisible => 'The address hides invisible characters';
+
+  @override
+  String get linkWarningIpAddress => 'Leads to an IP address, not a site';
+
+  @override
+  String linkWarningScheme(String scheme) {
+    return 'Opens through $scheme:, not in a browser';
+  }
+
+  @override
+  String linkWarningLetter(String letter) {
+    return '“$letter”';
+  }
+
+  @override
+  String linkWarningLetters(String letters, String script) {
+    return '$letters from $script';
+  }
+
+  @override
+  String get linkScriptLatin => 'Latin';
+
+  @override
+  String get linkScriptCyrillic => 'Cyrillic';
+
+  @override
+  String get linkScriptGreek => 'Greek';
+
+  @override
+  String get linkScriptArmenian => 'Armenian';
 
   @override
   String get chatScreenMessageTooLong =>
@@ -4757,6 +4937,51 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatWallpaperSheetSampleOutgoing => 'Looks great 🔥';
 
   @override
+  String get chatWallpaperSheetInherit => 'Default';
+
+  @override
+  String get chatWallpaperSheetCurrent => 'Current';
+
+  @override
+  String get chatWallpaperSheetCustomGradient => 'Gradient';
+
+  @override
+  String get chatWallpaperSheetApply => 'Apply';
+
+  @override
+  String get chatWallpaperPresetKomet => 'Comet';
+
+  @override
+  String get chatWallpaperPresetGraphite => 'Graphite';
+
+  @override
+  String get chatWallpaperPresetInk => 'Ink';
+
+  @override
+  String get chatWallpaperPresetPine => 'Pine';
+
+  @override
+  String get chatWallpaperPresetPlum => 'Plum';
+
+  @override
+  String get chatWallpaperPresetUmber => 'Umber';
+
+  @override
+  String get chatWallpaperPresetPaper => 'Paper';
+
+  @override
+  String get chatWallpaperPresetFog => 'Fog';
+
+  @override
+  String get chatWallpaperPresetSage => 'Sage';
+
+  @override
+  String get chatWallpaperPresetSand => 'Sand';
+
+  @override
+  String get chatWallpaperPresetPowder => 'Powder';
+
+  @override
   String get chatWallpaperSheetNone => 'No wallpaper';
 
   @override
@@ -4858,6 +5083,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get webAppScreenCloseConfirm => 'Close the mini app?';
+
+  @override
+  String get webAppUnsupportedPlatform =>
+      'Mini apps aren\'t available in the Linux version yet';
 
   @override
   String get voiceRecordUnsupported =>
@@ -5233,6 +5462,53 @@ class AppLocalizationsEn extends AppLocalizations {
       'The code expired — we sent a new one';
 
   @override
+  String get codeConfirmationIncomingCall =>
+      'We\'re calling your number. Enter the last 6 digits of the incoming number. If there\'s no call, check SMS and the “Verification codes” chat in MAX.';
+
+  @override
+  String get callOutDescription =>
+      'Call the number below from this number to confirm sign-in. Wait for the robot to answer and follow its prompts.';
+
+  @override
+  String get callOutWaitingNumber => 'Getting a number to call…';
+
+  @override
+  String get callOutTapToCopy => 'Tap to copy';
+
+  @override
+  String callOutTimer(String time) {
+    return 'Call within $time';
+  }
+
+  @override
+  String get callOutExpired => 'Time to call is up — refresh the number';
+
+  @override
+  String get callOutVerified => 'Call received, signing in…';
+
+  @override
+  String callOutDial(String number) {
+    return 'Call $number';
+  }
+
+  @override
+  String get callOutDialPending => 'Call';
+
+  @override
+  String get callOutRefresh => 'Refresh number';
+
+  @override
+  String get callOutNewNumber => 'We got a new number — call it instead';
+
+  @override
+  String callOutRefreshFailed(String error) {
+    return 'Couldn\'t refresh the number: $error';
+  }
+
+  @override
+  String get callOutCommonError => 'Couldn\'t sign in, please try again';
+
+  @override
   String get pollViewVoteFailed => 'Couldn\'t vote';
 
   @override
@@ -5266,6 +5542,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get customizationTitle => 'Customization';
+
+  @override
+  String get chatFoldersAddTo => 'Add to folder';
+
+  @override
+  String chatFoldersUpdateFailed(String title) {
+    return 'Couldn\'t update the folder “$title”';
+  }
 
   @override
   String get folderActionNewFolder => 'New folder';
@@ -5906,6 +6190,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get kometSettingsAntiReadSubtitle =>
       'Read messages without marking them as read';
+
+  @override
+  String get kometSettingsAntiStoryViewSubtitle =>
+      'Watch stories without appearing among their viewers. The author still sees your reactions and replies';
 
   @override
   String get kometSettingsSelfOnlineCheckSubtitle =>
@@ -6916,42 +7204,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transcriptionNotRecognized => 'Couldn\'t recognize the voice';
 
   @override
-  String get chatWallpaperThemeOcean => 'Ocean';
-
-  @override
-  String get chatWallpaperThemeSunset => 'Sunset';
-
-  @override
-  String get chatWallpaperThemeLavender => 'Lavender';
-
-  @override
-  String get chatWallpaperThemeMint => 'Mint';
-
-  @override
-  String get chatWallpaperThemeGraphite => 'Graphite';
-
-  @override
-  String get chatWallpaperThemeSky => 'Sky';
-
-  @override
-  String get chatWallpaperThemePeach => 'Peach';
-
-  @override
-  String get chatWallpaperThemeForest => 'Forest';
-
-  @override
-  String get chatWallpaperThemeGrape => 'Grape';
-
-  @override
-  String get chatWallpaperThemeNight => 'Night';
-
-  @override
-  String get chatWallpaperThemeRose => 'Rose';
-
-  @override
-  String get chatWallpaperThemeAmber => 'Amber';
-
-  @override
   String get mediaSaveFileNotFound => 'file not found';
 
   @override
@@ -7052,6 +7304,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get callScreenMutedByAdmin => 'An admin stopped your screen sharing';
 
   @override
+  String get callMicUnavailable =>
+      'No microphone access — others can\'t hear you';
+
+  @override
+  String get callMicSettings => 'Settings';
+
+  @override
   String get callMediaLocked => 'An admin has disabled this in the call';
 
   @override
@@ -7128,4 +7387,117 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get callYouLoweredHand => 'You lowered the participant\'s hand';
+
+  @override
+  String whatsNewBannerTitle(Object version) {
+    return 'Komet updated to $version';
+  }
+
+  @override
+  String get whatsNewBannerSubtitle => 'Tap to see what\'s new';
+
+  @override
+  String whatsNewSheetTitle(Object version) {
+    return 'What\'s new in $version';
+  }
+
+  @override
+  String get whatsNewNoNotes => 'Bug fixes and stability improvements.';
+
+  @override
+  String get whatsNewDone => 'Got it';
+
+  @override
+  String get appearanceAnimationsTitle => 'Animations';
+
+  @override
+  String get appearanceAnimationsSubtitle =>
+      'Transitions between screens and tabs. Turn off to open everything instantly';
+
+  @override
+  String get login2faRequiredTitle =>
+      'Set a password on the device you\'ve signed in to MAX on';
+
+  @override
+  String get login2faRequiredSteps =>
+      'To do so, go to Settings → Security → Sign-in password';
+
+  @override
+  String get login2faRequiredThen => 'Then you\'ll be able to sign in here';
+
+  @override
+  String get login2faRequiredNotKomet =>
+      'This is NOT a Komet error. MAX requires it from everyone.';
+
+  @override
+  String get login2faRequiredRetry => 'Try signing in again';
+
+  @override
+  String get login2faRequiredNoAccess => 'I can\'t access the account';
+
+  @override
+  String get login2faRequiredLinkFailed =>
+      'Couldn\'t open go.max.ru/reset-session';
+
+  @override
+  String get informerBannerServerNote =>
+      'This is an announcement from the MAX server. It isn\'t related to Komet.';
+
+  @override
+  String get storyReplyHint => 'Reply';
+
+  @override
+  String get storyReplySent => 'Message sent';
+
+  @override
+  String get storyReplyFailed => 'Couldn\'t send the reply';
+
+  @override
+  String get storyReplyEncrypted =>
+      'This chat is encrypted, so story replies aren\'t available';
+
+  @override
+  String get storyLikeFailed => 'Couldn\'t react to the story';
+
+  @override
+  String get storyReplyLabel => 'Story';
+
+  @override
+  String get storyReplyGone => 'A story was here';
+
+  @override
+  String get storyReplyUnavailable => 'The story is no longer available';
+
+  @override
+  String get storyMenuProfile => 'Go to profile';
+
+  @override
+  String get storyMenuHide => 'Hide author\'s stories';
+
+  @override
+  String get storyMenuSave => 'Save to gallery';
+
+  @override
+  String get storyMenuReport => 'Report';
+
+  @override
+  String get storyHiddenNotice => 'The author\'s stories are hidden';
+
+  @override
+  String get storyHideFailed => 'Couldn\'t hide the stories';
+
+  @override
+  String get storyReplyOpenChat => 'View';
+
+  @override
+  String get storyHiddenUndo => 'Undo';
+
+  @override
+  String get storyMenuShow => 'Show author\'s stories';
+
+  @override
+  String get storyShownNotice => 'The author\'s stories are visible again';
+
+  @override
+  String get storyShowFailed => 'Couldn\'t show the stories';
 }

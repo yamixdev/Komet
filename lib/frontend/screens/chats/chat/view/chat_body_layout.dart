@@ -1,14 +1,17 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:komet/backend/modules/chats.dart' show CachedChat;
 import 'package:komet/core/config/app_chat_chrome.dart';
 import 'package:komet/core/config/app_visual_style.dart';
-import 'package:komet/core/storage/chat_wallpaper_store.dart' show ChatWallpaper;
+import 'package:komet/core/storage/chat_wallpaper_store.dart'
+    show ChatWallpaper;
 import 'package:komet/frontend/screens/chats/chat/command_panel_controller.dart';
 import 'package:komet/frontend/screens/chats/chat/chat_search_controller.dart';
 import 'package:komet/frontend/screens/chats/chat/mention_panel_controller.dart';
 import 'package:komet/frontend/screens/chats/chat/video_note_controller.dart';
 import 'package:komet/frontend/screens/chats/chat/message_search_result.dart';
 import 'package:komet/frontend/widgets/chat_wallpaper_view.dart';
+import 'package:komet/frontend/widgets/seasonal_snow.dart';
 import 'package:komet/frontend/widgets/toast_placement.dart';
 
 import 'chat_call_banner.dart';
@@ -31,7 +34,8 @@ class ChatBodyLayout extends StatelessWidget {
   final VoidCallback? onUnpinCurrentMessage;
   final VoidCallback? onJoinCall;
   final bool composerFrosted;
-  final ValueNotifier<double> composerHeight;
+  final ValueListenable<double> composerHeight;
+  final ValueChanged<double> onComposerMeasured;
   final ValueNotifier<double> pinnedBannerHeight;
   final Widget Function(BuildContext) composerAreaBuilder;
   final Widget messagesArea;
@@ -62,6 +66,7 @@ class ChatBodyLayout extends StatelessWidget {
     required this.onJoinCall,
     required this.composerFrosted,
     required this.composerHeight,
+    required this.onComposerMeasured,
     required this.pinnedBannerHeight,
     required this.composerAreaBuilder,
     required this.messagesArea,
@@ -124,7 +129,7 @@ class ChatBodyLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     final composer = ToastObstruction(
       child: MeasureSize(
-        onHeight: (value) => composerHeight.value = value,
+        onHeight: onComposerMeasured,
         child: Builder(builder: composerAreaBuilder),
       ),
     );
@@ -142,7 +147,10 @@ class ChatBodyLayout extends StatelessWidget {
               fit: StackFit.expand,
               children: [
                 if (wallpaper != null)
-                  Positioned.fill(child: ChatWallpaperView(wallpaper: wallpaper!)),
+                  Positioned.fill(
+                    child: ChatWallpaperView(wallpaper: wallpaper!),
+                  ),
+                const Positioned.fill(child: SeasonalSnowLayer()),
                 Positioned.fill(child: messagesArea),
                 ValueListenableBuilder<double>(
                   valueListenable: composerHeight,
@@ -179,6 +187,7 @@ class ChatBodyLayout extends StatelessWidget {
       children: [
         if (wallpaper != null)
           Positioned.fill(child: ChatWallpaperView(wallpaper: wallpaper!)),
+        const Positioned.fill(child: SeasonalSnowLayer()),
         Positioned.fill(child: messagesArea),
         SearchOverlay(
           cs: cs,

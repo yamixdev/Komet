@@ -17,12 +17,16 @@ import 'core/cache/chat_scroll_memory.dart';
 import 'core/cache/info_cache.dart';
 import 'core/plugins/plugin_store.dart';
 import 'core/config/build_profile.dart';
+import 'core/config/whats_new.dart';
+import 'core/config/app_motion.dart';
+import 'frontend/widgets/app_motion_scope.dart';
 import 'core/utils/app_foreground.dart';
 import 'core/utils/logger.dart';
 import 'core/cache/self_presence.dart';
 import 'core/storage/app_instance.dart';
 import 'core/storage/draft_store.dart';
 import 'core/storage/archived_chats_store.dart';
+import 'core/storage/ghost_read_store.dart';
 import 'core/storage/local_contact_avatars.dart';
 import 'core/crypto/e2ee_service.dart';
 import 'core/crypto/encrypted_photo_cache.dart';
@@ -55,7 +59,8 @@ import 'core/config/app_phonebook_names.dart';
 import 'core/contacts/device_contacts_service.dart';
 import 'core/config/app_link_preview.dart';
 import 'core/config/app_unchecked_links.dart';
-import 'core/config/app_media_cache.dart';
+import 'core/config/app_cache_limit.dart';
+import 'core/cache/cache_janitor.dart';
 import 'core/config/app_video_note_quality.dart';
 import 'core/config/app_pill_gradient.dart';
 import 'core/config/app_visual_style.dart';
@@ -98,6 +103,7 @@ import 'core/share/native_share_account_sync.dart';
 import 'core/push/push_service.dart';
 import 'core/storage/app_database.dart';
 import 'core/storage/per_chat_json_store.dart';
+import 'core/transport/network_core.dart';
 import 'core/transport/tls_config.dart';
 import 'core/transport/traffic_monitor.dart';
 import 'core/transport/vpn_bypass.dart';
@@ -111,6 +117,7 @@ import 'frontend/debug/performance_monitor.dart';
 import 'frontend/screens/auth/login_screen.dart';
 import 'frontend/widgets/adaptive_shell.dart';
 import 'frontend/widgets/chat_wallpaper_view.dart' show WallpaperImages;
+import 'frontend/widgets/theme_wallpaper.dart' show precacheWallpaperTheme;
 import 'frontend/widgets/custom_notification.dart';
 import 'frontend/widgets/hint_bubble.dart';
 import 'frontend/widgets/keyboard_cover.dart';
@@ -145,11 +152,21 @@ const ProgressIndicatorThemeData _expressiveProgressTheme =
 
 const PageTransitionsTheme _appPageTransitions = PageTransitionsTheme(
   builders: <TargetPlatform, PageTransitionsBuilder>{
-    TargetPlatform.android: PredictiveBackPageTransitionsBuilder(),
-    TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
-    TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
-    TargetPlatform.windows: ZoomPageTransitionsBuilder(),
-    TargetPlatform.linux: ZoomPageTransitionsBuilder(),
+    TargetPlatform.android: MotionAwarePageTransitions(
+      PredictiveBackPageTransitionsBuilder(),
+    ),
+    TargetPlatform.iOS: MotionAwarePageTransitions(
+      CupertinoPageTransitionsBuilder(),
+    ),
+    TargetPlatform.macOS: MotionAwarePageTransitions(
+      CupertinoPageTransitionsBuilder(),
+    ),
+    TargetPlatform.windows: MotionAwarePageTransitions(
+      ZoomPageTransitionsBuilder(),
+    ),
+    TargetPlatform.linux: MotionAwarePageTransitions(
+      ZoomPageTransitionsBuilder(),
+    ),
   },
 );
 
@@ -220,8 +237,8 @@ void main(List<String> args) async {
   if (AppInstance.isNamed) {
     SharedPreferences.setPrefix('flutter.${AppInstance.id}.');
   }
-  debugPrint('KOMET-STARTUP: applyMincifryTrust...');
-  await TlsConfig.applyMincifryTrust();
+  debugPrint('KOMET-STARTUP: NetworkCore.configure...');
+  await NetworkCore.configure();
   debugPrint('KOMET-STARTUP: AppDatabase.init...');
   await AppDatabase.init();
   await DecryptedPhotoStore.clear();
@@ -242,6 +259,8 @@ void main(List<String> args) async {
   unawaited(DeepLinkService.instance.init());
 
   final packageInfoFuture = PackageInfo.fromPlatform();
+  final whatsNewFuture = WhatsNew.load();
+  final motionFuture = AppMotion.load();
   final localeFuture = AppLanguage.load();
   final hapticsFuture = Haptics.load();
   final prefsFuture = SharedPreferences.getInstance();
@@ -269,7 +288,7 @@ void main(List<String> args) async {
   final phonebookNamesFuture = AppPhonebookNames.load();
   final linkPreviewFuture = AppLinkPreview.load();
   final uncheckedLinksFuture = AppUncheckedLinks.load();
-  final cacheLimitFuture = AppMediaCacheLimit.load();
+  final cacheLimitFuture = AppCacheLimit.load();
   final videoNoteResolutionFuture = AppVideoNoteResolution.load();
   final videoNoteFpsFuture = AppVideoNoteFps.load();
   final videoNoteRearCameraFuture = AppVideoNoteRearCamera.load();
@@ -292,9 +311,12 @@ void main(List<String> args) async {
   await FileHistoryCache.load(prefs);
   await DraftStore.instance.load();
   await ArchivedChatsStore.instance.load();
+  await GhostReadStore.instance.load();
   await LocalContactAvatars.instance.load();
   await badgeFuture;
   await notificationsFuture;
+  await whatsNewFuture;
+  await motionFuture;
   await ChatEncryptionStore.instance.load();
   E2eeService.instance.attach(messagesModule);
   await KometSettings.load();
@@ -357,6 +379,7 @@ void main(List<String> args) async {
   ]);
   debugPrint('KOMET-STARTUP: DeviceContactsService.loadFromStartup...');
   unawaited(DeviceContactsService.loadFromStartup());
+  CacheJanitor.instance.schedule(CacheJanitor.startupDelay);
   await trafficCaptureFuture;
   await debugLogFuture;
   debugPrint('KOMET-STARTUP: runApp');
@@ -937,8 +960,12 @@ class KometAppState extends State<KometApp>
     await ChatWallpaperStore.instance.load();
     final wallpaper = accountId == 0
         ? null
-        : ChatWallpaperStore.instance.get(accountId, kGlobalWallpaperChatId);
+        : ChatWallpaperStore.instance.effective(
+            accountId,
+            kGlobalWallpaperChatId,
+          );
     WallpaperImages.holdGlobal(wallpaper);
+    ChatWallpaperStore.instance.themeIds.forEach(precacheWallpaperTheme);
     if (!AppWallpaperTint.current.value || wallpaper == null) {
       _globalWallpaper = null;
       wallpaperSeed.value = null;
@@ -1155,15 +1182,13 @@ class KometAppState extends State<KometApp>
                   valueListenable: fontScale,
                   child: child ?? const SizedBox.shrink(),
                   builder: (context, scale, appChild) {
-                    Widget scaledChild = KeyboardCoverScope(child: appChild!);
-                    final effective = AppFonts.effectiveScale(_fontId, scale);
-                    if ((effective - 1.0).abs() > 0.001) {
-                      scaledChild = MediaQuery.withClampedTextScaling(
-                        minScaleFactor: effective,
-                        maxScaleFactor: effective,
-                        child: scaledChild,
-                      );
-                    }
+                    Widget scaledChild = AppMotionScope(
+                      child: KeyboardCoverScope(child: appChild!),
+                    );
+                    scaledChild = AppTextScaling(
+                      factor: AppFonts.effectiveScale(_fontId, scale),
+                      child: scaledChild,
+                    );
                     return ValueListenableBuilder<bool>(
                       valueListenable: fpsOverlayEnabled,
                       child: scaledChild,

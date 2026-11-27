@@ -221,17 +221,54 @@ class AccountModule {
 
     logger.i('Отправка OTP-кода (opcode=${Opcode.auth})');
 
-    final packet = await _api.sendRequest(Opcode.auth, payload);
+    final packet = await _api.sendRequest(Opcode.auth, payload, silent: true);
 
-    final data = _requireMapPayload(packet, 'verifyCode');
+    return _acceptVerification(
+      _requireMapPayload(packet, 'verifyCode'),
+      'verifyCode',
+    );
+  }
 
+  Future<CallOutCheck> checkCallOut(String trackId) async {
+    _ensureOnline();
+
+    final packet = await _api.sendRequest(Opcode.authCheckCall, {
+      'trackId': trackId,
+    });
+
+    final check = CallOutCheck.fromPayload(
+      _requireMapPayload(packet, 'checkCallOut').cast<dynamic, dynamic>(),
+    );
+    logger.d(
+      '[${_api.debugTag}] checkCallOut: статус=${check.status?.name} '
+      'номер для звонка=${check.callNumber != null}',
+    );
+    return check;
+  }
+
+  Future<VerifyCodeResult> loginByTrack(String trackId) async {
+    _ensureOnline();
+
+    logger.i('Вход после звонка (opcode=${Opcode.authByTrack})');
+
+    final packet = await _api.sendRequest(Opcode.authByTrack, {
+      'trackId': trackId,
+    }, silent: true);
+
+    return _acceptVerification(
+      _requireMapPayload(packet, 'loginByTrack'),
+      'loginByTrack',
+    );
+  }
+
+  Future<VerifyCodeResult> _acceptVerification(Map data, String method) async {
     final result = VerifyCodeResult(payload: data.cast<dynamic, dynamic>());
 
     final loginToken = result.loginToken;
     final verifiedProfile = _profileFromVerifyPayload(result.payload);
     final accountId = result.accountId ?? verifiedProfile?.id;
     logger.d(
-      '[${_api.debugTag}] verifyCode: нужен пароль=${result.requiresPassword} '
+      '[${_api.debugTag}] $method: нужен пароль=${result.requiresPassword} '
       'регистрация=${result.isRegistration} '
       'login-токен ${_describeSecret(loginToken)} accountId=$accountId '
       'профиль в ответе=${verifiedProfile != null} '
@@ -320,6 +357,7 @@ class AccountModule {
     int? accountId,
     String? token,
     LoginSyncParams? syncParams,
+    String? accountPhone,
   }) async {
     _ensureOnline();
 
@@ -362,7 +400,12 @@ class AccountModule {
 
       // #***! вошли по чужому токену, id узнаём из ответа
       if (resolvedAccountId == null) {
-        resolvedAccountId = extractAccountId(dataMap);
+        resolvedAccountId = await resolveLoginAccountId(
+          dataMap,
+          phone: accountPhone,
+          lookupByPhone: (phone) async =>
+              (await ContactsModule.findByPhone(_api, phone, silent: true))?.id,
+        );
         if (resolvedAccountId == null) {
           logger.e(
             'login: accountId не найден в ответе; '
@@ -435,7 +478,7 @@ class AccountModule {
   }
 
   // #***! вход по чужому токену из дев меню
-  Future<LoginResult> loginWithToken(String token) async {
+  Future<LoginResult> loginWithToken(String token, {String? accountPhone}) async {
     if (token.isEmpty) {
       throw StateError('loginWithToken: пустой токен');
     }
@@ -464,7 +507,7 @@ class AccountModule {
     }
 
     logger.i('Вход по токену: сессия поднята со спуфом, выполняю login');
-    return login(token: token);
+    return login(token: token, accountPhone: accountPhone);
   }
 
   // #***! Экспериментальный SMS-вход через веб. Веб-клиент MAX всегда шлёт код по
@@ -1242,6 +1285,11 @@ class AccountModule {
         SyncKey.folderFiltersEnabled,
         serverConfig['enable-filters-for-folders'] == true ? '1' : '0',
       );
+      await AppDatabase.setSyncValue(
+        accountId,
+        SyncKey.viewsCountEnabled,
+        serverConfig['views-count-enabled'] == true ? '1' : '0',
+      );
       await _persistEntryBannerApps(accountId, serverConfig);
       final moneyBotId = parseIntOrNull(
         serverConfig[MoneyTransferApp.configKey],
@@ -1318,11 +1366,22 @@ class AccountModule {
       throw Exception('requestCode: отсутствует token в ответе сервера');
     }
 
-    logger.i('OTP-код запрошен, получен временный токен');
+    final rawCallOut = data['callOutParams'];
+    final callOut = CallOutParams.tryParse(rawCallOut);
+    if (rawCallOut != null && callOut == null) {
+      logger.w('requestCode: callOutParams без trackId/ttl/pollingInterval');
+    }
+
+    logger.i(
+      callOut == null
+          ? 'OTP-код запрошен, получен временный токен'
+          : 'Сервер ждёт звонка с номера, опрос раз в '
+                '${callOut.pollingInterval.inMilliseconds} мс',
+    );
     logger.d(
       '[${_api.debugTag}] requestCode: ключи ответа=${data.keys.toList()}',
     );
-    return RequestCodeResult(token: token);
+    return RequestCodeResult(token: token, callOut: callOut);
   }
 
   // #***! дальше три помощника

@@ -350,26 +350,24 @@ class MainActivity : AudioServiceFragmentActivity() {
                     result.success(p)
                 }
                 "notifyAccepted" -> {
-                    val caller = call.argument<String>("caller") ?: "Звонок"
                     CallRinger.stop(call.argument<String>("conversationId"))
                     NotificationManagerCompat.from(this).cancel(CallConst.NOTIF_ID)
-                    CallForegroundService.start(applicationContext, caller)
+                    CallForegroundService.start(applicationContext, call.argument<String>("caller"))
                     result.success(null)
                 }
                 "ensureOngoing" -> {
-                    val caller = call.argument<String>("caller") ?: "Звонок"
-                    CallForegroundService.start(applicationContext, caller)
+                    CallForegroundService.start(applicationContext, call.argument<String>("caller"))
                     result.success(null)
                 }
                 "setScreenShare" -> {
                     val enabled = call.argument<Boolean>("enabled") ?: false
-                    val caller = call.argument<String>("caller") ?: "Звонок"
-                    CallForegroundService.setScreenShare(
-                        applicationContext,
-                        enabled,
-                        caller,
+                    result.success(
+                        CallForegroundService.setScreenShare(
+                            applicationContext,
+                            enabled,
+                            call.argument<String>("caller"),
+                        ),
                     )
-                    result.success(null)
                 }
                 "dropOngoing" -> {
                     CallForegroundService.stop(applicationContext)
@@ -1041,6 +1039,7 @@ class MainActivity : AudioServiceFragmentActivity() {
     override fun onResume() {
         super.onResume()
         AppState.resumed = true
+        CallForegroundService.refreshTypes()
         stashChatOpen(intent, emit = true)
     }
 

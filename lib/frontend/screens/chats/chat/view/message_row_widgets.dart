@@ -28,6 +28,7 @@ import 'package:komet/frontend/widgets/reaction_picker.dart'
     show availableReactions;
 import 'package:komet/frontend/widgets/rich_message_controller.dart';
 import 'package:komet/frontend/widgets/custom_notification.dart';
+import 'package:komet/frontend/widgets/format_selection_toolbar.dart';
 import 'package:komet/frontend/widgets/selection_check_circle.dart';
 import 'package:komet/frontend/widgets/small_spinner.dart';
 import 'package:komet/frontend/widgets/sticker_pin.dart';
@@ -39,6 +40,9 @@ import 'package:komet/models/chat_reaction_settings.dart';
 
 import '../message_media_draft.dart';
 import 'edit_media_strip.dart';
+
+bool isFailedOutgoingMessage(CachedMessage message, int myId) =>
+    message.senderId == myId && message.status == 'error';
 
 class PinnedMessageBanner extends StatelessWidget {
   final String? text;
@@ -228,7 +232,8 @@ class _PinnedMessageTextState extends State<PinnedMessageText> {
 class SelectableMessageRow extends StatefulWidget {
   final Widget child;
   final CachedMessage message;
-  final bool isMe;
+  final bool outgoing;
+  final bool failedSend;
   final ValueListenable<Set<String>> selectedIds;
   final Animation<double> selectionAnim;
   final bool Function() isSelectionActive;
@@ -239,6 +244,7 @@ class SelectableMessageRow extends StatefulWidget {
   final VoidCallback onDelete;
   final bool allowDelete;
   final VoidCallback? onEdit;
+  final VoidCallback? onRetry;
   final VoidCallback? onReply;
   final VoidCallback? onForward;
   final bool allowCopy;
@@ -262,7 +268,8 @@ class SelectableMessageRow extends StatefulWidget {
     super.key,
     required this.child,
     required this.message,
-    required this.isMe,
+    required this.outgoing,
+    this.failedSend = false,
     required this.selectedIds,
     required this.selectionAnim,
     required this.isSelectionActive,
@@ -273,6 +280,7 @@ class SelectableMessageRow extends StatefulWidget {
     required this.onDelete,
     this.allowDelete = true,
     this.onEdit,
+    this.onRetry,
     this.onReply,
     this.onForward,
     this.allowCopy = true,
@@ -303,6 +311,7 @@ class _SelectableMessageRowState extends State<SelectableMessageRow> {
   final GlobalKey _boundaryKey = GlobalKey();
   Offset? _lastTapDown;
   Timer? _openTimer;
+  bool _menuOpen = false;
 
   bool _isPinnedNow() => widget.isPinned();
 
@@ -338,9 +347,11 @@ class _SelectableMessageRowState extends State<SelectableMessageRow> {
     } catch (_) {
       return;
     }
+    if (mounted) setState(() => _menuOpen = true);
 
     Haptics.tap();
 
+    final failed = widget.failedSend;
     final controller = MessageActionsController();
     final offers = _reactionFilter();
     final stickerId = _stickerId;
@@ -349,45 +360,50 @@ class _SelectableMessageRowState extends State<SelectableMessageRow> {
       snapshot: snapshot,
       originRect: rect,
       tapPoint: _lastTapDown ?? rect.center,
-      isMe: widget.isMe,
+      outgoing: widget.outgoing,
       bottomReservedSpace: widget.composerHeight?.value ?? 0,
       messageText: widget.message.text,
       copyText: MessageDecryptionCache.instance.readableText(widget.message),
       controller: controller,
       style: AppMessageActionsStyle.effective,
       interaction: MessageActionsInteraction.tap,
-      editHistory: widget.message.editHistory,
-      infoRows: _infoRows(),
-      loadReadBy: widget.loadReadBy,
-      onReaderTap: widget.onReaderTap,
-      loadReportReasons: widget.loadReportReasons,
-      onReport: widget.onReport,
+      editHistory: failed ? null : widget.message.editHistory,
+      infoRows: failed ? null : _infoRows(),
+      loadReadBy: failed ? null : widget.loadReadBy,
+      onReaderTap: failed ? null : widget.onReaderTap,
+      loadReportReasons: failed ? null : widget.loadReportReasons,
+      onReport: failed ? null : widget.onReport,
       onDelete: widget.onDelete,
       allowDelete: widget.allowDelete,
-      onEdit: widget.onEdit,
-      onReply: widget.onReply,
-      onForward: widget.onForward,
-      allowCopy: widget.allowCopy,
-      onMarkUnread: widget.onMarkUnread,
-      onPin: widget.onPin,
-      onCopyLink: widget.onCopyLink,
-      onSave: widget.onSave,
-      onSaveAs: widget.onSaveAs,
-      isPinned: _isPinnedNow(),
-      onPinSticker: _pinStickerAction(stickerId),
-      isStickerPinned: _isStickerPinned(stickerId),
-      onReact: _reactionsOpen || _selectedReaction != null
+      onEdit: failed ? null : widget.onEdit,
+      onReply: failed ? null : widget.onReply,
+      onForward: failed ? null : widget.onForward,
+      allowCopy: !failed && widget.allowCopy,
+      onMarkUnread: failed ? null : widget.onMarkUnread,
+      onPin: failed ? null : widget.onPin,
+      onCopyLink: failed ? null : widget.onCopyLink,
+      onSave: failed ? null : widget.onSave,
+      onSaveAs: failed ? null : widget.onSaveAs,
+      isPinned: failed ? false : _isPinnedNow(),
+      onPinSticker: failed ? null : _pinStickerAction(stickerId),
+      isStickerPinned: !failed && _isStickerPinned(stickerId),
+      onReact: !failed && (_reactionsOpen || _selectedReaction != null)
           ? widget.onReact
           : null,
-      selectedReaction: _selectedReaction,
-      quickReactions: _offeredQuickReactions(offers),
-      loadReactionEmojis: () async {
-        await animojiModule.ensureLoaded();
-        return availableReactions()
-            .where((reaction) => offers(reaction.emoji))
-            .toList();
+      selectedReaction: failed ? null : _selectedReaction,
+      quickReactions: failed ? const [] : _offeredQuickReactions(offers),
+      loadReactionEmojis: failed
+          ? null
+          : () async {
+              await animojiModule.ensureLoaded();
+              return availableReactions()
+                  .where((reaction) => offers(reaction.emoji))
+                  .toList();
+            },
+      onDispose: () {
+        controller.dispose();
+        if (mounted && _menuOpen) setState(() => _menuOpen = false);
       },
-      onDispose: controller.dispose,
     );
   }
 
@@ -403,7 +419,6 @@ class _SelectableMessageRowState extends State<SelectableMessageRow> {
 
   String? get _selectedReaction =>
       widget.reactions?.value?['yourReaction']?.toString();
-
 
   bool Function(String emoji) _reactionFilter() {
     final settings = _settings;
@@ -447,47 +462,54 @@ class _SelectableMessageRowState extends State<SelectableMessageRow> {
 
     final origin = renderObject.localToGlobal(Offset.zero);
     final rect = origin & renderObject.size;
-
+    final failed = widget.failedSend;
     final controller = MessageActionsController();
     final stickerId = _stickerId;
     showMessageActions(
       context: ctx,
       originRect: rect,
       tapPoint: details.globalPosition,
-      isMe: widget.isMe,
+      outgoing: widget.outgoing,
       bottomReservedSpace: widget.composerHeight?.value ?? 0,
       messageText: widget.message.text,
       copyText: MessageDecryptionCache.instance.readableText(widget.message),
       controller: controller,
       style: MessageActionsStyle.list,
       interaction: MessageActionsInteraction.click,
-      editHistory: widget.message.editHistory,
-      infoRows: _infoRows(),
-      loadReadBy: widget.loadReadBy,
-      onReaderTap: widget.onReaderTap,
-      loadReportReasons: widget.loadReportReasons,
-      onReport: widget.onReport,
+      editHistory: failed ? null : widget.message.editHistory,
+      infoRows: failed ? null : _infoRows(),
+      loadReadBy: failed ? null : widget.loadReadBy,
+      onReaderTap: failed ? null : widget.onReaderTap,
+      loadReportReasons: failed ? null : widget.loadReportReasons,
+      onReport: failed ? null : widget.onReport,
       onDelete: widget.onDelete,
       allowDelete: widget.allowDelete,
-      onEdit: widget.onEdit,
-      onReply: widget.onReply,
-      onForward: widget.onForward,
-      allowCopy: widget.allowCopy,
-      onMarkUnread: widget.onMarkUnread,
-      onPin: widget.onPin,
-      onCopyLink: widget.onCopyLink,
-      onSave: widget.onSave,
-      onSaveAs: widget.onSaveAs,
-      isPinned: _isPinnedNow(),
-      onPinSticker: _pinStickerAction(stickerId),
-      isStickerPinned: _isStickerPinned(stickerId),
+      onEdit: failed ? null : widget.onEdit,
+      onReply: failed ? null : widget.onReply,
+      onForward: failed ? null : widget.onForward,
+      allowCopy: !failed && widget.allowCopy,
+      onMarkUnread: failed ? null : widget.onMarkUnread,
+      onPin: failed ? null : widget.onPin,
+      onCopyLink: failed ? null : widget.onCopyLink,
+      onSave: failed ? null : widget.onSave,
+      onSaveAs: failed ? null : widget.onSaveAs,
+      isPinned: failed ? false : _isPinnedNow(),
+      onPinSticker: failed ? null : _pinStickerAction(stickerId),
+      isStickerPinned: !failed && _isStickerPinned(stickerId),
       onDispose: controller.dispose,
     );
   }
 
   void _handleTap() {
     if (widget.isSelectionActive()) {
-      widget.onToggleSelection();
+      if (!widget.failedSend) widget.onToggleSelection();
+      return;
+    }
+    if (widget.failedSend) {
+      _openTimer?.cancel();
+      _openTimer = Timer(const Duration(milliseconds: 200), () {
+        if (mounted && !widget.isSelectionActive()) _openMenu();
+      });
       return;
     }
     final emoji = accountModule.doubleTapReaction.value;
@@ -523,6 +545,11 @@ class _SelectableMessageRowState extends State<SelectableMessageRow> {
 
   void _handleLongPressStart(Offset globalPosition) {
     _textSelectionPress = false;
+    if (widget.failedSend) {
+      _lastTapDown = globalPosition;
+      _openMenu();
+      return;
+    }
     if (!widget.isSelectionActive()) {
       widget.onEnterSelection();
       return;
@@ -553,6 +580,49 @@ class _SelectableMessageRowState extends State<SelectableMessageRow> {
           builder: (context, selected, _) {
             final isSelected = selected.contains(widget.message.id);
             final active = selected.isNotEmpty;
+            final messageChild = Padding(
+              padding: EdgeInsets.only(left: _gutterWidth * t),
+              child: widget.child,
+            );
+            final sourceChild = widget.failedSend && widget.onRetry != null
+                ? Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      messageChild,
+                      Padding(
+                        padding: const EdgeInsetsDirectional.only(
+                          end: 12,
+                          top: 4,
+                          bottom: 2,
+                        ),
+                        child: TextButton.icon(
+                          key: ValueKey(
+                            'failed-message-retry-${widget.message.id}',
+                          ),
+                          onPressed: widget.onRetry,
+                          icon: const Icon(Symbols.refresh, size: 17),
+                          label: Text(
+                            AppLocalizations.of(context)!.msgActionsRetry,
+                          ),
+                          style: TextButton.styleFrom(
+                            foregroundColor: cs.error,
+                            minimumSize: Size.zero,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            textStyle: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                : messageChild;
 
             return GestureDetector(
               behavior: HitTestBehavior.opaque,
@@ -572,11 +642,14 @@ class _SelectableMessageRowState extends State<SelectableMessageRow> {
                   children: [
                     RepaintBoundary(
                       key: _boundaryKey,
-                      child: IgnorePointer(
-                        ignoring: active,
-                        child: Padding(
-                          padding: EdgeInsets.only(left: _gutterWidth * t),
-                          child: widget.child,
+                      child: Opacity(
+                        key: ValueKey(
+                          'message-actions-source-${widget.message.id}',
+                        ),
+                        opacity: _menuOpen ? 0 : 1,
+                        child: IgnorePointer(
+                          ignoring: active,
+                          child: sourceChild,
                         ),
                       ),
                     ),
@@ -705,18 +778,11 @@ class EditMessageSheet extends StatefulWidget {
   final String text;
   final Iterable<FormatRange> formatRanges;
   final List<PhotoAttachment>? photos;
-  final Widget Function(
-    RichMessageController controller,
-    BuildContext context,
-    EditableTextState editableState,
-  )
-  contextMenuBuilder;
 
   const EditMessageSheet({
     super.key,
     required this.text,
     required this.formatRanges,
-    required this.contextMenuBuilder,
     this.photos,
   });
 
@@ -815,8 +881,10 @@ class _EditMessageSheetState extends State<EditMessageSheet> {
             maxLines: 6,
             textCapitalization: TextCapitalization.sentences,
             style: TextStyle(color: cs.onSurface),
-            contextMenuBuilder: (ctx, state) =>
-                widget.contextMenuBuilder(_controller, ctx, state),
+            contextMenuBuilder: (_, state) => FormatSelectionToolbar(
+              controller: _controller,
+              editableState: state,
+            ),
             decoration: InputDecoration(
               hintText: media == null
                   ? l10n.scheduledMessageTextHint
