@@ -1,6 +1,3 @@
-import 'dart:io';
-import 'dart:typed_data';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:m3e_collection/m3e_collection.dart';
@@ -88,21 +85,13 @@ class _FontSettingsScreenState extends State<FontSettingsScreen> {
   }
 
   Future<void> _addFontFromFile() async {
-    final result = await AppLock.instance.external(
-      () => FilePicker.platform.pickFiles(type: FileType.any, withData: true),
-    );
-    final picked = result?.files.single;
+    final picked = await AppLock.instance.external(() => FilePicker.pickFile());
     if (picked == null || !mounted) return;
     setState(() => _adding = true);
     String? family;
     try {
-      final path = picked.path;
-      final Uint8List? bytes =
-          picked.bytes ??
-          (path == null ? null : await File(path).readAsBytes());
-      if (bytes != null) {
-        family = await CustomFontService.addFromFile(bytes, picked.name);
-      }
+      final bytes = await picked.readAsBytes();
+      family = await CustomFontService.addFromFile(bytes, picked.name);
     } catch (_) {
       family = null;
     } finally {

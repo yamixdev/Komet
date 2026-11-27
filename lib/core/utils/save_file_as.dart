@@ -38,12 +38,12 @@ Future<SaveFileAsResult> saveFileAs({
       return await _exportDocument(source, name);
     }
     final directory = await AppLock.instance.external(
-      () => FilePicker.platform.getDirectoryPath(dialogTitle: dialogTitle),
+      () => FilePicker.pickDirectory(dialogTitle: dialogTitle),
     );
     if (directory == null) {
       return const SaveFileAsResult(saved: false, cancelled: true);
     }
-    final target = await availableSaveTarget(directory, name);
+    final target = await availableSaveTarget(directory.toFilePath(), name);
     if (p.equals(p.absolute(source.path), p.absolute(target.path))) {
       return SaveFileAsResult(saved: true, path: target.path);
     }

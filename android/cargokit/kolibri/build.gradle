@@ -1,0 +1,25 @@
+group = 'ru.kolibri'
+version = '1.0'
+
+apply plugin: 'com.android.library'
+
+android {
+    namespace = 'ru.kolibri'
+    compileSdk = 33
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+    defaultConfig {
+        minSdk = 19
+    }
+    sourceSets.main.setRoot(new File(cargoKitPackageDirectory, 'android/src/main').absolutePath)
+}
+
+apply from: rootProject.file('../native/komet_tlottie/cargokit/gradle/plugin.gradle')
+
+cargokit {
+    manifestDir = new File(cargoKitPackageDirectory, 'rust').absolutePath
+    buildToolDirectory = new File(cargoKitPackageDirectory, 'cargokit')
+    libname = 'kolibri_dart'
+}

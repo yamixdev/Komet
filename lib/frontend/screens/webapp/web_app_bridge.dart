@@ -575,9 +575,11 @@ class WebAppBridge {
     }
     try {
       final result = await AppLock.instance.external(
-        () => Share.share(
-          text,
-          sharePositionOrigin: shareOriginOf(contextResolver()),
+        () => SharePlus.instance.share(
+          ShareParams(
+            text: text,
+            sharePositionOrigin: shareOriginOf(contextResolver()),
+          ),
         ),
       );
       _send(method, {

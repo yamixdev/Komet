@@ -60,10 +60,10 @@ class WallpaperPick {
 }
 
 Future<Uint8List?> pickWallpaperBytes(BuildContext context) async {
-  final result = await AppLock.instance.external(
-    () => FilePicker.platform.pickFiles(type: FileType.image),
+  final file = await AppLock.instance.external(
+    () => FilePicker.pickFile(type: FileType.image),
   );
-  final path = result?.files.firstOrNull?.path;
+  final path = file?.path;
   if (path == null) return null;
   if (await File(path).length() > kMaxWallpaperBytes) {
     if (context.mounted) {

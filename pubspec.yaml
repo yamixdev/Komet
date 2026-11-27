@@ -65,15 +65,15 @@ dependencies:
   crypto: ^3.0.7
   ffi: ^2.1.0
   logger: ^2.6.2
-  device_info_plus: 12.3.0
+  device_info_plus: ^13.3.0
   flutter_timezone: ^5.0.1
   timezone: ^0.11.0
-  file_picker: ^8.0.0
+  file_picker: ^13.4.1
   image_picker: ^1.1.2
-  camera: ^0.11.0
-  permission_handler: ^11.3.1
+  camera: ^0.12.2
+  permission_handler: ^13.0.2
   archive: ^4.0.9
-  geolocator: ^13.0.0
+  geolocator: ^14.1.2
   photo_manager: ^3.0.0
   image: ^4.3.0
   sqflite: ^2.4.2
@@ -84,29 +84,29 @@ dependencies:
   dynamic_color: ^1.8.1
   material_color_utilities: ^0.13.0
   shared_preferences: ^2.5.4
-  flutter_secure_storage: ^10.3.1
-  package_info_plus: ^9.0.1
+  flutter_secure_storage: ^10.3.4
+  package_info_plus: ^10.2.2
   mobile_scanner: ^7.2.0
   qr: ^4.0.0
   flutter_contacts: ^2.6.0
-  cached_network_image: ^3.4.1
+  cached_network_image: ^4.0.7
   flutter_cache_manager: ^3.4.1
   lottie: ^3.3.1
   path_provider: ^2.1.4
-  share_plus: ^10.1.4
-  open_filex: ^4.5.0
+  share_plus: ^13.3.1
+  open_filex: ^5.0.0
   url_launcher: ^6.3.1
   app_links: ^7.0.0
   video_player: ^2.9.2
-  firebase_core: ^4.1.1
-  firebase_messaging: ^16.0.2
-  flutter_local_notifications: ^22.0.1
+  firebase_core: ^4.15.2
+  firebase_messaging: ^16.7.1
+  flutter_local_notifications: ^23.0.4
   flutter_inappwebview: 6.2.0-beta.3
   flutter_webrtc:
     git:
       url: https://github.com/KometTeam/flutter-webrtc.git
       ref: 8fcca4e41c6f4e736fb1b48dc8d86638ff01c9bf
-  record: ^6.0.0
+  record: ^7.2.0
   opus_dart: ^3.0.1
   opus_flutter_android: ^3.0.1
   ogg_opus_player: ^0.8.0
@@ -122,7 +122,7 @@ dependencies:
   media_kit_libs_linux: ^1.2.1
   media_kit_libs_macos_video: ^1.1.4
   sensors_plus: ^7.1.0
-  smart_auth: ^3.2.0
+  smart_auth: ^4.0.1
   flutter_svg: ^2.0.10
   fjs: ^3.3.0
   cryptography: ^2.7.0

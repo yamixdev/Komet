@@ -6095,16 +6095,18 @@ class _ChatScreenState extends State<ChatScreen>
 
   Future<void> _pickAndUploadFile({int? scheduledTime}) async {
     final initialDirectory = await _filePickerStartDirectory();
-    final result = await AppLock.instance.external(
-      () => FilePicker.platform.pickFiles(initialDirectory: initialDirectory),
+    final picked = await AppLock.instance.external(
+      () => FilePicker.pickFile(initialDirectory: initialDirectory),
     );
-    if (result == null || result.files.isEmpty) return;
-    final picked = result.files.first;
-    if (picked.path == null) return;
+    if (picked == null || !mounted) return;
+    final path = picked.path;
+    if (path == null) return;
+    final size = await picked.length();
+    if (size == null || !mounted) return;
     await _mediaSend.uploadAsFile(
-      source: File(picked.path!),
+      source: File(path),
       filename: picked.name,
-      size: picked.size,
+      size: size,
       scheduledTime: scheduledTime,
     );
   }

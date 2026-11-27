@@ -414,12 +414,12 @@ class _CloudStorageScreenState extends State<CloudStorageScreen>
     final accountId = _accountId;
     if (chatId == null || accountId == null) return;
 
-    final result = await AppLock.instance.external(
-      () => FilePicker.platform.pickFiles(),
-    );
-    if (result == null || result.files.isEmpty) return;
-    final picked = result.files.first;
-    if (picked.path == null) return;
+    final picked = await AppLock.instance.external(() => FilePicker.pickFile());
+    if (picked == null || !mounted) return;
+    final path = picked.path;
+    if (path == null) return;
+    final size = await picked.length();
+    if (size == null || !mounted) return;
 
     _uploadProgress.value = 0;
     setState(() => _isUploading = true);
@@ -429,9 +429,9 @@ class _CloudStorageScreenState extends State<CloudStorageScreen>
       accountId: accountId,
       chatId: chatId,
       tempId: service.newTempId(),
-      source: File(picked.path!),
+      source: File(path),
       filename: picked.name,
-      size: picked.size,
+      size: size,
     );
     _syncUploadJob();
     await sending;

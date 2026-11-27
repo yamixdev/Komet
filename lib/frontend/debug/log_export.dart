@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:archive/archive.dart';
 import 'package:file_picker/file_picker.dart';
@@ -26,20 +25,19 @@ Future<void> exportDebugLog(BuildContext context) async {
   }
   final bytes = ZipEncoder().encodeBytes(archive);
   final fileName = 'komet_debug_${formatFileStamp(DateTime.now())}.zip';
-  final isMobile = Platform.isAndroid || Platform.isIOS;
   try {
-    final path = await AppLock.instance.external(
-      () => FilePicker.platform.saveFile(
+    final destination = await AppLock.instance.external(
+      () => FilePicker.saveFile(
         dialogTitle: 'Сохранить отладочный лог',
         fileName: fileName,
-        type: FileType.any,
-        bytes: isMobile ? bytes : null,
+        bytes: bytes,
+        mimeType: 'application/zip',
       ),
     );
-    if (path == null) return;
-    if (!isMobile) {
-      await File(path).writeAsBytes(bytes);
-    }
+    if (destination == null) return;
+    final path = destination.scheme == 'file'
+        ? destination.toFilePath()
+        : destination.toString();
     if (context.mounted) {
       showCustomNotification(context, 'Лог сохранён: $path');
     }

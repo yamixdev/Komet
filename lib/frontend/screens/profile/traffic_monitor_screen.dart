@@ -72,12 +72,14 @@ class _TrafficMonitorScreenState extends State<TrafficMonitorScreen> {
       final file = File('${dir.path}/komet_traffic_$stamp.json');
       await file.writeAsString(json);
       await AppLock.instance.external(
-        () => Share.shareXFiles(
-          [XFile(file.path, mimeType: 'application/json')],
-          subject: 'Komet traffic capture',
-          sharePositionOrigin: box == null
-              ? null
-              : box.localToGlobal(Offset.zero) & box.size,
+        () => SharePlus.instance.share(
+          ShareParams(
+            files: [XFile(file.path, mimeType: 'application/json')],
+            subject: 'Komet traffic capture',
+            sharePositionOrigin: box == null
+                ? null
+                : box.localToGlobal(Offset.zero) & box.size,
+          ),
         ),
       );
     } catch (e) {

@@ -254,7 +254,7 @@ class BleContactExchange(private val context: Context) {
             offset: Int,
             value: ByteArray?,
         ) {
-            if (responseNeeded) {
+            if (responseNeeded && device != null) {
                 try {
                     gattServer?.sendResponse(
                         device,

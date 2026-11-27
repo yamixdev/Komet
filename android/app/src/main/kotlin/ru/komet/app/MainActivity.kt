@@ -751,8 +751,8 @@ class MainActivity : AudioServiceFragmentActivity() {
                 .build()
             // Аудио в моно (как у клиента).
             val mono = ChannelMixingAudioProcessor()
-            mono.putChannelMixingMatrix(ChannelMixingMatrix.create(1, 1))
-            mono.putChannelMixingMatrix(ChannelMixingMatrix.create(2, 1))
+            mono.putChannelMixingMatrix(ChannelMixingMatrix.createForConstantGain(1, 1))
+            mono.putChannelMixingMatrix(ChannelMixingMatrix.createForConstantGain(2, 1))
             val effects = Effects(
                 listOf(mono),
                 listOf<Effect>(

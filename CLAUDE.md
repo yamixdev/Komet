@@ -27,11 +27,15 @@ flutter build linux --release
 flutter build windows --release
 ```
 
-Android builds require **Java 17**. Gradle memory is configured to `-Xmx4096m`.
+Android builds require **Java 17 or newer** and **Android SDK Platform 37**. The Android
+CI jobs that configure Gradle memory use `-Xmx4096m`.
+
+The Android Gradle projects under `android/cargokit` use the same CargoKit Gradle code as
+`komet_tlottie`. They read each package's Android sources and run its own CargoKit build tool.
 
 **16 KB pages.** Google Play rejects a release whose 64-bit `.so` files have ELF `LOAD` segments
-aligned below 16 KB. NDK r28 links with 16 KB by default, r27 — AGP 8.11's default NDK — with 4 KB,
-so `android/build.gradle.kts` hands every library subproject the app's NDK (`flutter.ndkVersion`)
+aligned below 16 KB. NDK r28 links with 16 KB by default, while r27 defaults to 4 KB.
+`android/build.gradle.kts` hands every library subproject the app's NDK (`flutter.ndkVersion`)
 before the plugin's own `android {}` block runs; a plugin that pins a version keeps it. Without
 this, `opus_flutter_android` (ndk-build, no `ndkVersion`) shipped a 4 KB `libopus.so`. A plugin
 pinned below r28 has to opt in itself (`ANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON`,

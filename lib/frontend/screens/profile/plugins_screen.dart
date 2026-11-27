@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -27,21 +25,15 @@ class _PluginsScreenState extends State<PluginsScreen> {
   final Set<String> _busy = {};
 
   Future<void> _installFile() async {
-    final result = await AppLock.instance.external(
-      () => FilePicker.platform.pickFiles(type: FileType.any, withData: true),
-    );
-    final picked = result?.files.single;
+    final picked = await AppLock.instance.external(() => FilePicker.pickFile());
     if (picked == null || !mounted) return;
     final l10n = AppLocalizations.of(context)!;
     try {
       if (!picked.name.toLowerCase().endsWith('.kinet')) {
         throw FormatException(l10n.pluginsScreenPickKinetFile);
       }
-      final path = picked.path;
-      final bytes =
-          picked.bytes ??
-          (path == null ? null : await File(path).readAsBytes());
-      if (bytes == null || bytes.isEmpty) {
+      final bytes = await picked.readAsBytes();
+      if (bytes.isEmpty) {
         throw FormatException(l10n.pluginsScreenReadFileFailed);
       }
       await _confirmAndInstall(await _installer.preview(bytes));

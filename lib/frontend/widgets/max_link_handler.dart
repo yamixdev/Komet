@@ -140,7 +140,11 @@ Future<bool> _shareOwnLink(BuildContext context) async {
     return true;
   }
   try {
-    await AppLock.instance.external(() => Share.share(link, sharePositionOrigin: shareOriginOf(context)));
+    await AppLock.instance.external(
+      () => SharePlus.instance.share(
+        ShareParams(text: link, sharePositionOrigin: shareOriginOf(context)),
+      ),
+    );
   } catch (_) {
     if (context.mounted) {
       showCustomNotification(

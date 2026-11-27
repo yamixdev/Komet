@@ -10,6 +10,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../../core/config/app_fonts.dart';
 import '../../../core/crypto/e2ee_service.dart';
 import '../../../core/storage/chat_encryption_store.dart';
+import '../../../core/utils/share_origin.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../widgets/custom_notification.dart';
 import '../../widgets/glossy_pill.dart';
@@ -202,27 +203,40 @@ class _E2eeScreenState extends State<E2eeScreen> {
       showCustomNotification(context, l10n.e2eeExportFailed);
       return;
     }
+    final shareOrigin = shareOriginOf(context);
     final dir = await getTemporaryDirectory();
     final file = File('${dir.path}/komet-e2ee-${widget.accountId}.kct');
-    await file.writeAsBytes(bytes, flush: true);
-    await AppLock.instance.external(() => Share.shareXFiles([XFile(file.path)]));
-    // #***! файл содержит ключ личности и все сессии, в кэше ему делать нечего
     try {
-      await file.delete();
-    } catch (_) {}
+      await file.writeAsBytes(bytes, flush: true);
+      await AppLock.instance.external(
+        () => SharePlus.instance.share(
+          ShareParams(files: [XFile(file.path)], sharePositionOrigin: shareOrigin),
+        ),
+      );
+    } catch (_) {
+      if (mounted) showCustomNotification(context, l10n.e2eeExportFailed);
+      return;
+    } finally {
+      try {
+        await file.delete();
+      } catch (_) {}
+    }
     if (!mounted) return;
     showCustomNotification(context, l10n.e2eeExportedAndDisabled);
   }
 
   Future<void> _import() async {
     final l10n = AppLocalizations.of(context)!;
-    final picked = await AppLock.instance.external(() => FilePicker.platform.pickFiles(withData: true));
-    final file = picked?.files.singleOrNull;
+    final file = await AppLock.instance.external(() => FilePicker.pickFile());
     if (file == null || !mounted) return;
-    Uint8List? bytes = file.bytes;
-    final path = file.path;
-    if (bytes == null && path != null) bytes = await File(path).readAsBytes();
-    if (bytes == null || !mounted) return;
+    final Uint8List bytes;
+    try {
+      bytes = await file.readAsBytes();
+    } catch (_) {
+      if (mounted) showCustomNotification(context, l10n.e2eeImportFailed);
+      return;
+    }
+    if (!mounted) return;
     final password = await _askPassword();
     if (password == null || !mounted) return;
     _busy.value = true;

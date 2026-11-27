@@ -6,15 +6,15 @@ import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.process.ExecOperations
 
 import javax.inject.Inject
-import java.nio.file.Paths
 
 CargoKitPlugin.file = buildscript.sourceFile
 
 apply plugin: CargoKitPlugin
 
 class CargoKitExtension {
-    String manifestDir; // Relative path to folder containing Cargo.toml
+    String manifestDir
     String libname; // Library name within Cargo.toml. Must be a cdylib
+    File buildToolDirectory
 }
 
 abstract class CargoKitBuildTask extends DefaultTask {
@@ -59,22 +59,21 @@ abstract class CargoKitBuildTask extends DefaultTask {
             throw new GradleException("Property 'libname' must be set on cargokit extension");
         }
 
-        def executableName = Os.isFamily(Os.FAMILY_WINDOWS) ? "run_build_tool.cmd" : "run_build_tool.sh"
-        def path = Paths.get(new File(pluginFile).parent, "..", executableName);
+        def isWindows = Os.isFamily(Os.FAMILY_WINDOWS)
+        def executableName = isWindows ? "run_build_tool.cmd" : "run_build_tool.sh"
+        def buildToolDirectory = project.cargokit.buildToolDirectory ?: new File(pluginFile).parentFile.parentFile
+        def path = new File(buildToolDirectory, executableName)
 
-        def manifestDir = Paths.get(project.buildscript.sourceFile.parent, project.cargokit.manifestDir)
+        def manifestDir = project.file(project.cargokit.manifestDir)
 
         def rootProjectDir = project.rootProject.projectDir
 
-        if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-            execOperations.exec {
-                commandLine 'chmod', '+x', path
-            }
-        }
-
         execOperations.exec {
-            executable path
-            args "build-gradle"
+            if (isWindows) {
+                commandLine path, "build-gradle"
+            } else {
+                commandLine "bash", path, "build-gradle"
+            }
             environment "CARGOKIT_ROOT_PROJECT_DIR", rootProjectDir
             environment "CARGOKIT_TOOL_TEMP_DIR", "${buildDir}/build_tool"
             environment "CARGOKIT_MANIFEST_DIR", manifestDir
@@ -177,7 +176,7 @@ class CargoKitPlugin implements Plugin<Project> {
                     ndkVersion = plugin.project.android.ndkVersion
                     sdkDirectory = plugin.project.android.sdkDirectory
                     minSdkVersion = plugin.project.android.defaultConfig.minSdkVersion.apiLevel as int
-                    compileSdkVersion = plugin.project.android.compileSdkVersion.substring(8) as int
+                    compileSdkVersion = plugin.project.android.compileSdk as int
                     targetPlatforms = platforms
                     pluginFile = CargoKitPlugin.file
                 }

@@ -41,10 +41,10 @@ Future<T?> pickImageWith<T>(
     onPickFile: () => fromFiles = true,
   );
   if (picked != null || !fromFiles || !context.mounted) return picked;
-  final files = await AppLock.instance.external(
-    () => FilePicker.platform.pickFiles(type: FileType.image),
+  final file = await AppLock.instance.external(
+    () => FilePicker.pickFile(type: FileType.image),
   );
-  final path = files?.files.firstOrNull?.path;
+  final path = file?.path;
   if (path == null || !context.mounted) return null;
   return accept(context, File(path), null);
 }

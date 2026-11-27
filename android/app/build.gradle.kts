@@ -1,5 +1,6 @@
 import java.util.Properties
 import java.io.FileInputStream
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 val debugAbi = providers.gradleProperty("komet.debugAbi").get()
 
@@ -20,17 +21,13 @@ if (hasReleaseSigning) {
 
 android {
     namespace = "ru.komet.app"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = maxOf(flutter.compileSdkVersion, 37)
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
         isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
     }
 
     defaultConfig {
@@ -96,17 +93,30 @@ android {
 
 }
 
+kotlin {
+    compilerOptions {
+        jvmTarget = JvmTarget.JVM_17
+    }
+}
+
 flutter {
     source = "../.."
 }
 
 dependencies {
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
-    implementation("androidx.media3:media3-transformer:1.9.3")
-    implementation("androidx.media3:media3-effect:1.9.3")
-    implementation("androidx.media3:media3-common:1.9.3")
-    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
+    val media3Version = "1.11.1"
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
+    implementation("androidx.media3:media3-transformer:$media3Version")
+    implementation("androidx.media3:media3-effect:$media3Version")
+    implementation("androidx.media3:media3-common:$media3Version")
+    constraints {
+        implementation("androidx.media3:media3-exoplayer-dash:$media3Version")
+        implementation("androidx.media3:media3-exoplayer-hls:$media3Version")
+        implementation("androidx.media3:media3-exoplayer-rtsp:$media3Version")
+        implementation("androidx.media3:media3-exoplayer-smoothstreaming:$media3Version")
+    }
+    implementation(platform("com.google.firebase:firebase-bom:34.19.0"))
     implementation("com.google.firebase:firebase-messaging")
-    implementation("androidx.core:core-ktx:1.13.1")
-    implementation("androidx.appcompat:appcompat:1.7.1")
+    implementation("androidx.core:core-ktx:1.19.1")
+    implementation("androidx.appcompat:appcompat:1.8.0")
 }
