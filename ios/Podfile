@@ -83,7 +83,7 @@ end
 # `PODS_XCFRAMEWORKS_BUILD_DIR`: with `use_frameworks!` CocoaPods copies vendored
 # xcframeworks into the pod target's own build dir, so for Runner that variable
 # expands to a file nothing ever produces and Xcode fails on the missing input.
-OPUS_XCFRAMEWORK = 'ogg_opus_player/darwin/Frameworks/libopus.xcframework'.freeze
+OPUS_XCFRAMEWORK = 'ogg_opus_player/darwin/ogg_opus_player/Frameworks/libopus.xcframework'.freeze
 OPUS_LIB_VAR = 'KOMET_OPUS_LIB'.freeze
 OPUS_FORCE_LOAD = %(-force_load "$(#{OPUS_LIB_VAR})").freeze
 OPUS_XCFRAMEWORK_DIR =
